@@ -75,13 +75,13 @@ def make_acrobot_vision_continuous_env_x():
     return env
 
 AcrobotVisionEnvX = make_acrobot_vision_env_x
-AcrobotVisionContinuousEnvX = make_acrobot_vision_continuous_env_x
+AcrobotContinuousVisionEnvX = make_acrobot_vision_continuous_env_x
 
 if __name__ == '__main__':
     # env = AcrobotEnvX()
     # env = AcrobotContinuousEnvX()
     # env = AcrobotVisionEnvX()
-    env = AcrobotVisionContinuousEnvX()
+    env = AcrobotContinuousVisionEnvX()
     env.reset()
     while True:
         env.render()

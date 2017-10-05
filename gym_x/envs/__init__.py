@@ -4,7 +4,8 @@
 from gym_x.envs.gym_acrobot_x import AcrobotEnvX
 from gym_x.envs.gym_acrobot_x import AcrobotContinuousEnvX
 from gym_x.envs.gym_acrobot_x import AcrobotVisionEnvX
-from gym_x.envs.gym_acrobot_x import AcrobotVisionContinuousEnvX
+from gym_x.envs.gym_acrobot_x import AcrobotContinuousVisionEnvX
 
 # Mountain Car
 from gym_x.envs.gym_mountain_car_x import MountainCarContinuousEnvX
+from gym_x.envs.gym_mountain_car_x import MountainCarContinuousVisionEnvX

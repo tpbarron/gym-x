@@ -14,14 +14,19 @@ register(
     entry_point='gym_x.envs:AcrobotVisionEnvX'
 )
 register(
-    id='AcrobotVisionContinuousX-v0',
-    entry_point='gym_x.envs:AcrobotVisionContinuousEnvX'
+    id='AcrobotContinuousVisionX-v0',
+    entry_point='gym_x.envs:AcrobotContinuousVisionEnvX'
 )
 
 # Mountain Car X
 register(
     id='MountainCarContinuousX-v0',
     entry_point='gym_x.envs:MountainCarContinuousEnvX'
+)
+
+register(
+    id='MountainCarContinuousVisionX-v0',
+    entry_point='gym_x.envs:MountainCarContinuousVisionEnvX'
 )
 
 # register(

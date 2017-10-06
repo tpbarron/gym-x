@@ -23,14 +23,14 @@ print("\n".join(['- ' + spec.id for spec in gym.envs.registry.all() if spec.id.f
 #TODO: update pybullet
 class ChainEnvX(AntBulletEnv):
 
-    def __init__(self):
+    def __init__(self,
+                 render_dims=(84, 84)):
         super(ChainEnvX, self).__init__()
 
-        render_width = 84
-        render_height = 84
+        self.render_dims = render_dims
         # The observation is a combination of joints and image
         self.observation_space = spaces.Tuple((AntBulletEnv.observation_space,
-                                               spaces.Box(low=0., high=1., shape=(render_width, render_height)))
+                                               spaces.Box(low=0., high=1., shape=render_dims)))
 
     def get_render_obs(self):
         """
@@ -55,14 +55,50 @@ class ChainEnvX(AntBulletEnv):
         obs, rew, done, info = AntBulletEnv._step(self, action)
         # TODO: concat observation with render in tuple
         # TODO: specify reward = 1 iff at terminal
+        # TODO: decide whether to cut out movement costs as well?
+        if self.robot.body_xyz[0] > 4:
+            done = True
+        if done:
+            rew += 1
         return obs, rew, done, info
+
+    def build_path(self):
+        # print (pybullet_data.getDataPath())
+        # p.setAdditionalSearchPath(pybullet_data.getDataPath()) #used by loadURDF
+        p.setAdditionalSearchPath("assets/") #used by loadURDF
+        self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, -2, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, -1, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, 0, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, 1, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, 2, 0.5], physicsClientId=self.physicsClientId)
+
+        self.cube_id = p.loadURDF("cube_red.urdf", basePosition=[-1, -2, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_red.urdf", basePosition=[-1, 2, 0.5], physicsClientId=self.physicsClientId)
+
+        self.cube_id = p.loadURDF("cube_lime.urdf", basePosition=[0, -2, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_lime.urdf", basePosition=[0, 2, 0.5], physicsClientId=self.physicsClientId)
+
+        self.cube_id = p.loadURDF("cube_blue.urdf", basePosition=[1, -2, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_blue.urdf", basePosition=[1, 2, 0.5], physicsClientId=self.physicsClientId)
+
+        self.cube_id = p.loadURDF("cube_yellow.urdf", basePosition=[2, -2, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_yellow.urdf", basePosition=[2, 2, 0.5], physicsClientId=self.physicsClientId)
+
+        self.cube_id = p.loadURDF("cube_cyan.urdf", basePosition=[3, -2, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_cyan.urdf", basePosition=[3, 2, 0.5], physicsClientId=self.physicsClientId)
+
+        self.cube_id = p.loadURDF("cube_magenta.urdf", basePosition=[4, -2, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_magenta.urdf", basePosition=[4, 2, 0.5], physicsClientId=self.physicsClientId)
+
+        self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, -2, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, -1, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 0, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 1, 0.5], physicsClientId=self.physicsClientId)
+        self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 2, 0.5], physicsClientId=self.physicsClientId)
 
     def _reset(self):
         AntBulletEnv._reset(self)
-        print (pybullet_data.getDataPath())
-        p.setAdditionalSearchPath(pybullet_data.getDataPath()) #used by loadURDF
-        # TODO: create cube asset with varying colors
-        self.cube_id = p.loadURDF("cube_small.urdf", basePosition=[0, 0, 10], physicsClientId=self.physicsClientId)
+        self.build_path()
 
     def _render(self, **kwargs):
         AntBulletEnv._render(self, **kwargs)
@@ -73,3 +109,6 @@ if __name__ == '__main__':
     env.reset()
     while True:
         env.step(env.action_space.sample())
+        break
+
+    env.reset()

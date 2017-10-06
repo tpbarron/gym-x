@@ -29,6 +29,12 @@ register(
     entry_point='gym_x.envs:MountainCarContinuousVisionEnvX'
 )
 
+# Chain
+register(
+    id='ChainVisionX-v0',
+    entry_point='gym_x.envs:ChainEnvX'
+)
+
 # register(
 #     id='RoboschoolAntPlain-v0',
 #     entry_point='roboschool_x.envs.maze:RoboschoolAntEnv',

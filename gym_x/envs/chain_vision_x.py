@@ -12,15 +12,7 @@ import pybullet_data
 # import pybullet_envs
 from pybullet_envs.gym_locomotion_envs import AntBulletEnv
 
-print("\n".join(['- ' + spec.id for spec in gym.envs.registry.all() if spec.id.find('Bullet')>=0]))
-
-# if __name__ == '__main__':
-#     env = AntBulletEnv() #gym.make('AntBulletEnv-v0')
-#     env.render(mode='human')
-#     env.reset()
-#     done = False
-#     while not done:
-#         env.step(env.action_space.sample())
+# print("\n".join(['- ' + spec.id for spec in gym.envs.registry.all() if spec.id.find('Bullet')>=0]))
 
 i = 0
 #TODO: update pybullet
@@ -31,8 +23,8 @@ class ChainEnvX(AntBulletEnv):
         super(ChainEnvX, self).__init__()
         self.render_dims = render_dims
         # The observation is a combination of joints and image
-        self.observation_space = spaces.Tuple((self.observation_space,
-                                               spaces.Box(low=0, high=255, shape=render_dims)))
+        self.observation_space = spaces.Tuple((spaces.Box(low=0, high=255, shape=(1, *render_dims)),
+                                                self.observation_space))
 
     def get_render_obs(self):
         """
@@ -62,6 +54,7 @@ class ChainEnvX(AntBulletEnv):
         # h=img_arr[1] #height of the image, in pixels
         rgb=img_arr[2] #color data RGB
         gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+        gray = gray.reshape((1, *self.render_dims))
         # global i
         # cv2.imwrite('imgs/test'+str(i)+'.png', gray)
         # print (rgb.shape) (w, h, 4)
@@ -116,22 +109,16 @@ class ChainEnvX(AntBulletEnv):
         electricity_cost += self.stall_torque_cost * float(np.square(a).mean())
 
         joints_at_limit_cost = float(self.joints_at_limit_cost * self.robot.joints_at_limit)
+        # set progress cost to 0 for exploration task
+        progress = 0
 
         debugmode=0
         if(debugmode):
-            print("alive=")
-            print(alive)
-            print("progress")
-            print(progress)
-            print("electricity_cost")
-            print(electricity_cost)
-            print("joints_at_limit_cost")
-            print(joints_at_limit_cost)
-            print("feet_collision_cost")
-            print(feet_collision_cost)
-
-        # set progress cost to 0 for exploration task
-        progress = 0
+            print("alive=",alive)
+            print("progress",progress)
+            print("electricity_cost",electricity_cost)
+            print("joints_at_limit_cost",joints_at_limit_cost)
+            print("feet_collision_cost",feet_collision_cost)
 
         # check if reached terminal
         goal_rew = 0.
@@ -149,17 +136,15 @@ class ChainEnvX(AntBulletEnv):
         ]
 
         if (debugmode):
-            print("rewards=")
-            print(self.rewards)
-            print("sum rewards")
-            print(sum(self.rewards))
+            print("rewards=",self.rewards)
+            print("sum rewards",sum(self.rewards))
 
         self.HUD(state, a, done)
         self.reward += sum(self.rewards)
 
         render = self.get_render_obs()
 
-        obs = (state, render)
+        obs = (render, state)
         assert self.observation_space.contains(obs)
         return obs, sum(self.rewards), bool(done), {}
 
@@ -180,7 +165,7 @@ class ChainEnvX(AntBulletEnv):
     def build_path(self):
         # print (pybullet_data.getDataPath())
         # p.setAdditionalSearchPath(pybullet_data.getDataPath()) #used by loadURDF
-        p.setAdditionalSearchPath("assets/") #used by loadURDF
+        p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
         self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, -2, 0.5], physicsClientId=self.physicsClientId)
         self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, -1, 0.5], physicsClientId=self.physicsClientId)
         self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, 0, 0.5], physicsClientId=self.physicsClientId)
@@ -212,17 +197,21 @@ class ChainEnvX(AntBulletEnv):
         self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 2, 0.5], physicsClientId=self.physicsClientId)
 
     def _reset(self):
-        AntBulletEnv._reset(self)
+        obs = AntBulletEnv._reset(self)
         self.build_path()
+        render = self.get_render_obs()
+        return (render, obs)
 
     def _render(self, **kwargs):
         AntBulletEnv._render(self, **kwargs)
 
 if __name__ == '__main__':
     env = ChainEnvX()
-    env.render(mode='human')
-    env.reset()
+    # env.render(mode='human')
+    state = env.reset()
+    print (state)
     while True:
+        print ("step")
         env.step(env.action_space.sample())
         # break
 

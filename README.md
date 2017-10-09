@@ -1,1 +1,1 @@
-# Roboschool extension for exploration tasks
+# Gym extension for exploration tasks

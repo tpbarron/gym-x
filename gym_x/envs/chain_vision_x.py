@@ -87,6 +87,7 @@ class ChainEnvX(AntBulletEnv):
 
         alive = float(self.robot.alive_bonus(state[0]+self.robot.initial_z, self.robot.body_rpy[1]))   # state[0] is body height above ground, body_rpy[1] is pitch
         done = alive < 0
+        # alive = 0 # zero out alive reward
         if not np.isfinite(state).all():
             print("~INF~", state)
             done = True
@@ -94,6 +95,7 @@ class ChainEnvX(AntBulletEnv):
         # potential_old = self.potential
         # self.potential = self.robot.calc_potential()
         # progress = float(self.potential - potential_old)
+        progress = 0
 
         feet_collision_cost = 0.0
         for i,f in enumerate(self.robot.feet): # TODO: Maybe calculating feet contacts could be done within the robot code
@@ -105,12 +107,13 @@ class ChainEnvX(AntBulletEnv):
                 self.robot.feet_contact[i] = 1.0
             else:
                 self.robot.feet_contact[i] = 0.0
+
+        electricity_cost = 0
         electricity_cost  = self.electricity_cost  * float(np.abs(a*self.robot.joint_speeds).mean())  # let's assume we have DC motor with controller, and reverse current braking
         electricity_cost += self.stall_torque_cost * float(np.square(a).mean())
 
+        joints_at_limit_cost = 0
         joints_at_limit_cost = float(self.joints_at_limit_cost * self.robot.joints_at_limit)
-        # set progress cost to 0 for exploration task
-        progress = 0
 
         debugmode=0
         if(debugmode):
@@ -147,20 +150,6 @@ class ChainEnvX(AntBulletEnv):
         obs = (render, state)
         assert self.observation_space.contains(obs)
         return obs, sum(self.rewards), bool(done), {}
-
-    # def _step(self, action):
-    #     obs, rew, done, info = AntBulletEnv._step(self, action)
-    #     # TODO: concat observation with render in tuple
-    #     # TODO: specify reward = 1 iff at terminal
-    #     # TODO: decide whether to cut out movement costs as well?
-    #     print (info)
-    #     if self.robot.body_xyz[0] > 4:
-    #         done = True
-    #     if done:
-    #         rew += 1
-    #     render = self.get_render_obs()
-    #     # input("")
-    #     return obs, rew, done, info
 
     def build_path(self):
         # print (pybullet_data.getDataPath())
@@ -207,7 +196,7 @@ class ChainEnvX(AntBulletEnv):
 
 if __name__ == '__main__':
     env = ChainEnvX()
-    # env.render(mode='human')
+    env.render(mode='human')
     state = env.reset()
     print (state)
     while True:

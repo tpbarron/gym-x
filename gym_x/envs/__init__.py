@@ -10,4 +10,6 @@ from gym_x.envs.gym_acrobot_x import AcrobotContinuousVisionEnvX
 from gym_x.envs.gym_mountain_car_x import MountainCarContinuousEnvX
 from gym_x.envs.gym_mountain_car_x import MountainCarContinuousVisionEnvX
 
+# pybullet envs
 from gym_x.envs.chain_vision_x import ChainEnvX
+from gym_x.envs.gym_locomotion_envs_x import Walker2DBulletEnvX

@@ -35,6 +35,11 @@ register(
     entry_point='gym_x.envs:ChainEnvX'
 )
 
+register(
+    id='Walker2DBulletX-v0',
+    entry_point='gym_x.envs:Walker2DBulletEnvX'
+)
+
 # register(
 #     id='RoboschoolAntPlain-v0',
 #     entry_point='roboschool_x.envs.maze:RoboschoolAntEnv',

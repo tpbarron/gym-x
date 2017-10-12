@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+gym_x/envs/__pycache__/
+gym_x/__pycache__/
 
 # C extensions
 *.so

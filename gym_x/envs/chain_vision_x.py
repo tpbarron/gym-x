@@ -9,18 +9,107 @@ import gym
 from gym import spaces
 import pybullet as p
 import pybullet_data
-# import pybullet_envs
 from pybullet_envs.gym_locomotion_envs import AntBulletEnv
 
-# print("\n".join(['- ' + spec.id for spec in gym.envs.registry.all() if spec.id.find('Bullet')>=0]))
-
-i = 0
-#TODO: update pybullet
 class ChainEnvX(AntBulletEnv):
+    """
+    Cutting out the first 8 of the state rep leaves only the joint angles
+    and contact bools
+    """
+
+    def __init__(self):
+        super(ChainEnvX, self).__init__()
+        l = self.observation_space.low
+        h = self.observation_space.high
+        shp = self.observation_space.shape[0]-8
+        self.observation_space = spaces.box(low=l, high=h, shape=(shp,))
+
+    def _step(self, a):
+        """
+        Mostly directly copied from `WalkerBaseBulletEnv` at
+        https://github.com/bulletphysics/bullet3/blob/master/examples/pybullet/gym/pybullet_envs/gym_locomotion_envs.py
+
+        But wanted to have access to all rewards so could manually determine which ones to use
+        """
+        if not self.scene.multiplayer:  # if multiplayer, action first applied to all robots, then global step() called, then _step() for all robots with the same actions
+            self.robot.apply_action(a)
+            self.scene.global_step()
+
+        state = self.robot.calc_state()  # also calculates self.joints_at_limit
+
+        alive = float(self.robot.alive_bonus(state[0]+self.robot.initial_z, self.robot.body_rpy[1]))   # state[0] is body height above ground, body_rpy[1] is pitch
+        done = alive < 0
+        # alive = 0 # zero out alive reward
+        if not np.isfinite(state).all():
+            print("~INF~", state)
+            done = True
+
+        # potential_old = self.potential
+        # self.potential = self.robot.calc_potential()
+        # progress = float(self.potential - potential_old)
+        progress = 0
+
+        feet_collision_cost = 0.0
+        for i,f in enumerate(self.robot.feet): # TODO: Maybe calculating feet contacts could be done within the robot code
+            contact_ids = set((x[2], x[4]) for x in f.contact_list())
+            #print("CONTACT OF '%d' WITH %d" % (contact_ids, ",".join(contact_names)) )
+            if (self.ground_ids & contact_ids):
+                #see Issue 63: https://github.com/openai/roboschool/issues/63
+                #feet_collision_cost += self.foot_collision_cost
+                self.robot.feet_contact[i] = 1.0
+            else:
+                self.robot.feet_contact[i] = 0.0
+
+        electricity_cost = 0
+        electricity_cost  = self.electricity_cost  * float(np.abs(a*self.robot.joint_speeds).mean())  # let's assume we have DC motor with controller, and reverse current braking
+        electricity_cost += self.stall_torque_cost * float(np.square(a).mean())
+
+        joints_at_limit_cost = 0
+        joints_at_limit_cost = float(self.joints_at_limit_cost * self.robot.joints_at_limit)
+
+        debugmode=0
+        if(debugmode):
+            print("alive=",alive)
+            print("progress",progress)
+            print("electricity_cost",electricity_cost)
+            print("joints_at_limit_cost",joints_at_limit_cost)
+            print("feet_collision_cost",feet_collision_cost)
+
+        # check if reached terminal
+        goal_rew = 0.
+        if self.robot.body_xyz[0] > 3:
+            goal_rew = 1.
+            done = True
+
+        self.rewards = [
+            alive,
+            progress,
+            goal_rew,
+            electricity_cost,
+            joints_at_limit_cost,
+            feet_collision_cost
+        ]
+
+        if (debugmode):
+            print("rewards=",self.rewards)
+            print("sum rewards",sum(self.rewards))
+
+        self.HUD(state, a, done)
+        self.reward += sum(self.rewards)
+
+        state = state[8:]
+        return state, sum(self.rewards), bool(done), {}
+
+    def _reset(self):
+        state = super()._reset()[8:]
+        return state
+
+
+class ChainVisionEnvX(AntBulletEnv):
 
     def __init__(self,
                  render_dims=(84, 84)):
-        super(ChainEnvX, self).__init__()
+        super(ChainVisionEnvX, self).__init__()
         self.render_dims = render_dims
         # The observation is a combination of joints and image
         self.observation_space = spaces.Tuple((spaces.Box(low=0, high=255, shape=(1, *render_dims)),
@@ -29,7 +118,6 @@ class ChainEnvX(AntBulletEnv):
     def get_render_obs(self):
         """
         Compute first-person view from robot
-
         """
         euler = p.getEulerFromQuaternion(self.robot.robot_body.current_orientation())
         yaw, pitch, roll = euler
@@ -42,7 +130,7 @@ class ChainEnvX(AntBulletEnv):
         fov = 120
         aspect = self.render_dims[0] / self.render_dims[1]
         nearPlane = 0.26 # this ensures outside body, may see limbs
-        farPlane = 100.0 # TODO: perhaps changing this will make the movement more "surprising?"
+        farPlane = 2.0 # TODO: perhaps changing this will make the movement more "surprising?"
 
         # TODO: fix me to be along moving axis
         viewMatrix = p.computeViewMatrix(cameraEyePosition, cameraTargetPosition, cameraUpVector, physicsClientId=self.physicsClientId)
@@ -79,88 +167,11 @@ class ChainEnvX(AntBulletEnv):
 
         But wanted to have access to all rewards so could manually determine which ones to use
         """
-        if not self.scene.multiplayer:  # if multiplayer, action first applied to all robots, then global step() called, then _step() for all robots with the same actions
-            self.robot.apply_action(a)
-            self.scene.global_step()
-
-        state = self.robot.calc_state()  # also calculates self.joints_at_limit
-
-        alive = float(self.robot.alive_bonus(state[0]+self.robot.initial_z, self.robot.body_rpy[1]))   # state[0] is body height above ground, body_rpy[1] is pitch
-        done = alive < 0
-        if not np.isfinite(state).all():
-            print("~INF~", state)
-            done = True
-
-        # potential_old = self.potential
-        # self.potential = self.robot.calc_potential()
-        # progress = float(self.potential - potential_old)
-
-        feet_collision_cost = 0.0
-        for i,f in enumerate(self.robot.feet): # TODO: Maybe calculating feet contacts could be done within the robot code
-            contact_ids = set((x[2], x[4]) for x in f.contact_list())
-            #print("CONTACT OF '%d' WITH %d" % (contact_ids, ",".join(contact_names)) )
-            if (self.ground_ids & contact_ids):
-                #see Issue 63: https://github.com/openai/roboschool/issues/63
-                #feet_collision_cost += self.foot_collision_cost
-                self.robot.feet_contact[i] = 1.0
-            else:
-                self.robot.feet_contact[i] = 0.0
-        electricity_cost  = self.electricity_cost  * float(np.abs(a*self.robot.joint_speeds).mean())  # let's assume we have DC motor with controller, and reverse current braking
-        electricity_cost += self.stall_torque_cost * float(np.square(a).mean())
-
-        joints_at_limit_cost = float(self.joints_at_limit_cost * self.robot.joints_at_limit)
-        # set progress cost to 0 for exploration task
-        progress = 0
-
-        debugmode=0
-        if(debugmode):
-            print("alive=",alive)
-            print("progress",progress)
-            print("electricity_cost",electricity_cost)
-            print("joints_at_limit_cost",joints_at_limit_cost)
-            print("feet_collision_cost",feet_collision_cost)
-
-        # check if reached terminal
-        goal_rew = 0.
-        if self.robot.body_xyz[0] > 3:
-            goal_rew = 1.
-            done = True
-
-        self.rewards = [
-            alive,
-            progress,
-            goal_rew,
-            electricity_cost,
-            joints_at_limit_cost,
-            feet_collision_cost
-        ]
-
-        if (debugmode):
-            print("rewards=",self.rewards)
-            print("sum rewards",sum(self.rewards))
-
-        self.HUD(state, a, done)
-        self.reward += sum(self.rewards)
-
+        state, rew, done, info = super()._step(a)
         render = self.get_render_obs()
-
         obs = (render, state)
         assert self.observation_space.contains(obs)
         return obs, sum(self.rewards), bool(done), {}
-
-    # def _step(self, action):
-    #     obs, rew, done, info = AntBulletEnv._step(self, action)
-    #     # TODO: concat observation with render in tuple
-    #     # TODO: specify reward = 1 iff at terminal
-    #     # TODO: decide whether to cut out movement costs as well?
-    #     print (info)
-    #     if self.robot.body_xyz[0] > 4:
-    #         done = True
-    #     if done:
-    #         rew += 1
-    #     render = self.get_render_obs()
-    #     # input("")
-    #     return obs, rew, done, info
 
     def build_path(self):
         # print (pybullet_data.getDataPath())
@@ -197,17 +208,15 @@ class ChainEnvX(AntBulletEnv):
         self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 2, 0.5], physicsClientId=self.physicsClientId)
 
     def _reset(self):
-        obs = AntBulletEnv._reset(self)
+        obs = super()._reset()
         self.build_path()
         render = self.get_render_obs()
         return (render, obs)
 
-    def _render(self, **kwargs):
-        AntBulletEnv._render(self, **kwargs)
 
 if __name__ == '__main__':
     env = ChainEnvX()
-    # env.render(mode='human')
+    env.render(mode='human')
     state = env.reset()
     print (state)
     while True:

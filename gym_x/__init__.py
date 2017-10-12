@@ -32,14 +32,21 @@ register(
 # Chain
 register(
     id='ChainVisionX-v0',
+    entry_point='gym_x.envs:ChainVisionEnvX'
+)
+
+register(
+    id='ChainX-v0',
     entry_point='gym_x.envs:ChainEnvX'
 )
 
-# register(
-#     id='RoboschoolAntPlain-v0',
-#     entry_point='roboschool_x.envs.maze:RoboschoolAntEnv',
-# )
-# register(
-#     id='RoboschoolHumanoidFlagrunHarderX-v0',
-#     entry_point='roboschool_x.envs:RoboschoolHumanoidFlagrunHarderX',
-# )
+# Walker2d
+register(
+    id='Walker2DBulletX-v0',
+    entry_point='gym_x.envs:Walker2DBulletEnvX'
+)
+
+register(
+    id='Walker2DVisionBulletX-v0',
+    entry_point='gym_x.envs:Walker2DVisionBulletEnvX'
+)

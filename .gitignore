@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 gym_x/__pycache__/
 gym_x/envs/__pycache__/
+gym_x/wrappers/__pycache__/
 
 # C extensions
 *.so

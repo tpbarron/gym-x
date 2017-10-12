@@ -32,7 +32,7 @@ class VisionEnv(gym.Wrapper):
         #     I = I.resize((256, 256))
         #     I.show()
         #     input("ready?")
-        obs *= (1.0 / 255.0)
+        # obs *= (1.0 / 255.0)
         obs = np.reshape(obs, (1,)+self._downsample)
 
         # store last frames

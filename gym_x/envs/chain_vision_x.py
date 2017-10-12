@@ -42,7 +42,7 @@ class ChainEnvX(AntBulletEnv):
         fov = 120
         aspect = self.render_dims[0] / self.render_dims[1]
         nearPlane = 0.26 # this ensures outside body, may see limbs
-        farPlane = 2.0 # TODO: perhaps changing this will make the movement more "surprising?"
+        farPlane = 100.0 # TODO: perhaps changing this will make the movement more "surprising?"
 
         # TODO: fix me to be along moving axis
         viewMatrix = p.computeViewMatrix(cameraEyePosition, cameraTargetPosition, cameraUpVector, physicsClientId=self.physicsClientId)

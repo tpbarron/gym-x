@@ -10,91 +10,74 @@ class Walker2DBulletEnvX(Walker2DBulletEnv):
 
     def __init__(self):
         Walker2DBulletEnv.__init__(self)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(14,)) # 22 - 8
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
+
+    # def get_state(self):
+    #     return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
 
     def _step(self, a):
         """
         Duplicate of super class so that can modify rewards
         """
-        if not self.scene.multiplayer:
-            # if multiplayer, action first applied to all robots,
-            # then global step() called, then _step() for all robots with the same actions
-            self.robot.apply_action(a)
-            self.scene.global_step()
+        return super()._step(a)
 
-        state = self.robot.calc_state()  # also calculates self.joints_at_limit
-        # state[0] is body height above ground, body_rpy[1] is pitch
-        alive = float(self.robot.alive_bonus(state[0]+self.robot.initial_z, self.robot.body_rpy[1]))
-        # alive *= 0.1
-        done = alive < 0
-        if not np.isfinite(state).all():
-            print("~INF~", state)
-            done = True
-
-        potential_old = self.potential
-        self.potential = self.robot.calc_potential()
-        progress = float(self.potential - potential_old)
-        # NOTE: progress = 0 in expl case
-        # progress = 0.0
-        # if self.robot.body_xyz[0] > self.max_x_dist:
-        #     print (self.robot.body_xyz)
-        #     self.max_x_dist = self.robot.body_xyz[0]
-        # if self.robot.body_xyz[0] > 2:
-        #     # abuse of variabe name, progress now +1 if movement > 5 units
-        #     # this is the same as the VIME paper
-        #     print ("X pos > 5!!!")
-        #     progress = 1.0
-
-        feet_collision_cost = 0.0
-        for i,f in enumerate(self.robot.feet): # TODO: Maybe calculating feet contacts could be done within the robot code
-            contact_ids = set((x[2], x[4]) for x in f.contact_list())
-            #print("CONTACT OF '%d' WITH %d" % (contact_ids, ",".join(contact_names)) )
-            if (self.ground_ids & contact_ids):
-                            #see Issue 63: https://github.com/openai/roboschool/issues/63
-                #feet_collision_cost += self.foot_collision_cost
-                self.robot.feet_contact[i] = 1.0
-            else:
-                self.robot.feet_contact[i] = 0.0
-
-
-        electricity_cost  = self.electricity_cost  * float(np.abs(a*self.robot.joint_speeds).mean())  # let's assume we have DC motor with controller, and reverse current braking
-        electricity_cost += self.stall_torque_cost * float(np.square(a).mean())
-
-        joints_at_limit_cost = float(self.joints_at_limit_cost * self.robot.joints_at_limit)
-        debugmode=0
-        if(debugmode):
-            print("alive=")
-            print(alive)
-            print("progress")
-            print(progress)
-            print("electricity_cost")
-            print(electricity_cost)
-            print("joints_at_limit_cost")
-            print(joints_at_limit_cost)
-            print("feet_collision_cost")
-            print(feet_collision_cost)
-
-        self.rewards = [
-            alive,
-            progress,
-            electricity_cost,
-            joints_at_limit_cost,
-            feet_collision_cost
-            ]
-        if (debugmode):
-            print("rewards=")
-            print(self.rewards)
-            print("sum rewards")
-            print(sum(self.rewards))
-        self.HUD(state, a, done)
-        self.reward += sum(self.rewards)
-        state = state[8:]
-        return state, sum(self.rewards), bool(done), {}
+        # if not self.scene.multiplayer:
+        #     # if multiplayer, action first applied to all robots,
+        #     # then global step() called, then _step() for all robots with the same actions
+        #     self.robot.apply_action(a)
+        #     self.scene.global_step()
+        #
+        # state = self.get_state()
+        # _ = self.robot.calc_state()  # also calculates self.joints_at_limit
+        # # state[0] is body height above ground, body_rpy[1] is pitch
+        # # if self.robot.initial_z is None:
+        # #     self.robot.initial_z = self.robot.body_xyz[2]
+        # # body_height = self.body_xyz[2] - self.initial_z
+        # # print (self.robot.body_xyz)
+        # alive = float(self.robot.alive_bonus(self.robot.body_xyz[2], self.robot.body_rpy[1]))
+        # # print ("alive: ", alive)
+        # done = alive < 0
+        # if not np.isfinite(state).all():
+        #     print("~INF~", state)
+        #     done = True
+        #
+        # potential_old = self.potential
+        # self.potential = self.robot.calc_potential()
+        # progress = float(self.potential - potential_old)
+        # # NOTE: progress = 0 in expl case
+        # feet_collision_cost = 0.
+        #
+        # electricity_cost = 0 # self.electricity_cost  * float(np.abs(a*self.robot.joint_speeds).mean())  # let's assume we have DC motor with controller, and reverse current braking
+        # electricity_cost += self.stall_torque_cost * float(np.square(a).sum())
+        #
+        # joints_at_limit_cost = 0 #float(self.joints_at_limit_cost * self.robot.joints_at_limit)
+        # debugmode=0
+        # if(debugmode):
+        #     print("alive=", alive)
+        #     print("progress=",progress)
+        #     print("electricity_cost=",electricity_cost)
+        #     print("joints_at_limit_cost=",joints_at_limit_cost)
+        #     print("feet_collision_cost=",feet_collision_cost)
+        #
+        # self.rewards = [
+        #     alive,
+        #     progress,
+        #     electricity_cost,
+        #     joints_at_limit_cost,
+        #     feet_collision_cost
+        # ]
+        # if (debugmode):
+        #     print("rewards=",self.rewards)
+        #     print("sum rewards=",sum(self.rewards))
+        #
+        # self.HUD(state, a, done)
+        # self.reward += sum(self.rewards)
+        # return state, sum(self.rewards), bool(done), {}
 
     def _reset(self):
-        state = super()._reset()[8:]
+        state = super()._reset()
+        # state = self.get_state()
         return state
-
 
 class Walker2DVisionBulletEnvX(Walker2DBulletEnvX):
 
@@ -133,6 +116,7 @@ class Walker2DVisionBulletEnvX(Walker2DBulletEnvX):
         rgb=img_arr[2] #color data RGB
         gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
         gray = gray.reshape((1, *self.render_dims))
+        gray[gray > 0] = 255
         return gray
 
     def _step(self, a):
@@ -147,33 +131,37 @@ class Walker2DVisionBulletEnvX(Walker2DBulletEnvX):
         # print (pybullet_data.getDataPath())
         # p.setAdditionalSearchPath(pybullet_data.getDataPath()) #used by loadURDF
         p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
-        self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, 1, 0.5], physicsClientId=self.physicsClientId)
-        self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[-2, 1, 1.5], physicsClientId=self.physicsClientId)
+        self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.001], physicsClientId=self.physicsClientId)
 
-        self.cube_id = p.loadURDF("cube_red.urdf", basePosition=[-1, 1, 0.5], physicsClientId=self.physicsClientId)
-        self.cube_id = p.loadURDF("cube_red.urdf", basePosition=[-1, 1, 1.5], physicsClientId=self.physicsClientId)
+        for i in range(-2, 6):
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 0.5], physicsClientId=self.physicsClientId)
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 1.5], physicsClientId=self.physicsClientId)
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 2.5], physicsClientId=self.physicsClientId)
 
-        self.cube_id = p.loadURDF("cube_lime.urdf", basePosition=[0, 1, 1.5], physicsClientId=self.physicsClientId)
-        self.cube_id = p.loadURDF("cube_lime.urdf", basePosition=[0, 1, 0.5], physicsClientId=self.physicsClientId)
-
-        self.cube_id = p.loadURDF("cube_blue.urdf", basePosition=[1, 1, 0.5], physicsClientId=self.physicsClientId)
-        self.cube_id = p.loadURDF("cube_blue.urdf", basePosition=[1, 1, 1.5], physicsClientId=self.physicsClientId)
-
-        self.cube_id = p.loadURDF("cube_yellow.urdf", basePosition=[2, 1, 0.5], physicsClientId=self.physicsClientId)
-        self.cube_id = p.loadURDF("cube_yellow.urdf", basePosition=[2, 1, 1.5], physicsClientId=self.physicsClientId)
-
-        self.cube_id = p.loadURDF("cube_cyan.urdf", basePosition=[3, 1, 0.5], physicsClientId=self.physicsClientId)
-        self.cube_id = p.loadURDF("cube_cyan.urdf", basePosition=[3, 1, 1.5], physicsClientId=self.physicsClientId)
-
-        self.cube_id = p.loadURDF("cube_magenta.urdf", basePosition=[4, 1, 0.5], physicsClientId=self.physicsClientId)
-        self.cube_id = p.loadURDF("cube_magenta.urdf", basePosition=[4, 1, 1.5], physicsClientId=self.physicsClientId)
-
-        self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 1, 0.5], physicsClientId=self.physicsClientId)
-        self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 1, 1.5], physicsClientId=self.physicsClientId)
+        # self.cube_id = p.loadURDF("cube_red.urdf", basePosition=[-1, 1, 0.5], physicsClientId=self.physicsClientId)
+        # self.cube_id = p.loadURDF("cube_red.urdf", basePosition=[-1, 1, 1.5], physicsClientId=self.physicsClientId)
+        #
+        # self.cube_id = p.loadURDF("cube_lime.urdf", basePosition=[0, 1, 1.5], physicsClientId=self.physicsClientId)
+        # self.cube_id = p.loadURDF("cube_lime.urdf", basePosition=[0, 1, 0.5], physicsClientId=self.physicsClientId)
+        #
+        # self.cube_id = p.loadURDF("cube_blue.urdf", basePosition=[1, 1, 0.5], physicsClientId=self.physicsClientId)
+        # self.cube_id = p.loadURDF("cube_blue.urdf", basePosition=[1, 1, 1.5], physicsClientId=self.physicsClientId)
+        #
+        # self.cube_id = p.loadURDF("cube_yellow.urdf", basePosition=[2, 1, 0.5], physicsClientId=self.physicsClientId)
+        # self.cube_id = p.loadURDF("cube_yellow.urdf", basePosition=[2, 1, 1.5], physicsClientId=self.physicsClientId)
+        #
+        # self.cube_id = p.loadURDF("cube_cyan.urdf", basePosition=[3, 1, 0.5], physicsClientId=self.physicsClientId)
+        # self.cube_id = p.loadURDF("cube_cyan.urdf", basePosition=[3, 1, 1.5], physicsClientId=self.physicsClientId)
+        #
+        # self.cube_id = p.loadURDF("cube_magenta.urdf", basePosition=[4, 1, 0.5], physicsClientId=self.physicsClientId)
+        # self.cube_id = p.loadURDF("cube_magenta.urdf", basePosition=[4, 1, 1.5], physicsClientId=self.physicsClientId)
+        #
+        # self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 1, 0.5], physicsClientId=self.physicsClientId)
+        # self.cube_id = p.loadURDF("cube_white.urdf", basePosition=[5, 1, 1.5], physicsClientId=self.physicsClientId)
 
     def _reset(self):
         obs = super()._reset()
-        # self.build_path()
+        self.build_path()
         render = self.get_render_obs()
         return render
         # return (render, obs)

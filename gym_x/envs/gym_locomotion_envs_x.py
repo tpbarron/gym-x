@@ -199,7 +199,6 @@ class Walker2DVisionBulletEnvX(Walker2DBulletEnvX):
 #         WalkerBaseBulletEnv.__init__(self, self.robot)
 #         print (dir(self.robot), self.robot.parts)
 
-
 class HalfCheetahBulletEnvX(HalfCheetahBulletEnv):
 
         def __init__(self):

@@ -34,6 +34,8 @@ class AcrobotEnvX(acrobot.AcrobotEnv):
             a = np.squeeze(a)
             torque = self.AVAIL_TORQUE[a]
 
+        assert self.action_space.contains(torque)
+
         # Add noise to the force action
         if self.torque_noise_max > 0:
             torque += self.np_random.uniform(-self.torque_noise_max, self.torque_noise_max)
@@ -60,7 +62,7 @@ class AcrobotEnvX(acrobot.AcrobotEnv):
         reward = 1. if terminal else 0.
         # reward = -1. if not terminal else 0.
         if self.ep_step == self.max_episode_steps:
-            terminal = True 
+            terminal = True
         return (self._get_ob(), reward, terminal, {})
 
     def _reset(self):
@@ -75,12 +77,12 @@ from gym_x.wrappers import VisionEnv
 
 def make_acrobot_vision_env_x():
     env = AcrobotEnvX()
-    env = VisionEnv(env, downsample=(84, 84), framestack=1)
+    env = VisionEnv(env, downsample=(32, 32), framestack=1)
     return env
 
 def make_acrobot_vision_continuous_env_x():
     env = AcrobotContinuousEnvX()
-    env = VisionEnv(env, downsample=(84, 84), framestack=1)
+    env = VisionEnv(env, downsample=(32, 32), framestack=1)
     return env
 
 AcrobotVisionEnvX = make_acrobot_vision_env_x

@@ -20,7 +20,7 @@ from gym_x.wrappers import VisionEnv
 
 def make_mountaincar_continuous_vision_env_x():
     env = MountainCarContinuousEnvX()
-    env = VisionEnv(env, downsample=(84, 84), framestack=1)
+    env = VisionEnv(env, downsample=(32, 32), framestack=1)
     return env
 
 MountainCarContinuousVisionEnvX = make_mountaincar_continuous_vision_env_x

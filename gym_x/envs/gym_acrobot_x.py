@@ -14,16 +14,19 @@ class AcrobotEnvX(acrobot.AcrobotEnv):
 
     continuous = False
 
-    def __init__(self):
+    def __init__(self, max_episode_steps=500):
         super(AcrobotEnvX, self).__init__()
         if self.continuous:
             # torque from -1, 1
             self.action_space = spaces.Box(-1., 1., shape = (1,))
         else:
             self.action_space = spaces.Discrete(3)
+        self.max_episode_steps = max_episode_steps
+        self.ep_step = 0
 
     def _step(self, a):
         """ Exactly the same as original with modification for discrete or continuous actions """
+        self.ep_step += 1
         s = self.state
         if self.continuous:
             torque = a
@@ -56,7 +59,13 @@ class AcrobotEnvX(acrobot.AcrobotEnv):
         terminal = self._terminal()
         reward = 1. if terminal else 0.
         # reward = -1. if not terminal else 0.
+        if self.ep_step == self.max_episode_steps:
+            terminal = True 
         return (self._get_ob(), reward, terminal, {})
+
+    def _reset(self):
+        self.ep_step = 0
+        return super()._reset()
 
 
 class AcrobotContinuousEnvX(AcrobotEnvX):

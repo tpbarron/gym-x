@@ -50,3 +50,13 @@ register(
     id='Walker2DVisionBulletX-v0',
     entry_point='gym_x.envs:Walker2DVisionBulletEnvX'
 )
+
+register(
+    id='HalfCheetahBulletX-v0',
+    entry_point='gym_x.envs:HalfCheetahBulletEnvX'
+)
+
+register(
+    id='HalfCheetahVisionBulletX-v0',
+    entry_point='gym_x.envs:HalfCheetahVisionBulletEnvX'
+)

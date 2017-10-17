@@ -175,6 +175,11 @@ class HopperBulletEnvX(HopperBulletEnv):
         def __init__(self):
             HopperBulletEnv.__init__(self)
             # self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
+            self.electricity_cost = -0.001 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+            self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+            self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+            self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
+            self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
 
         def _get_obs(self):
             return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
@@ -245,10 +250,10 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
 
     def build_path(self):
         p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
-        self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
-        ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
-        for i in ground_plane_mjcf:
-            p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
+        # self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
+        # ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
+        # for i in ground_plane_mjcf:
+        #     p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
         for i in range(-2, 6):
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 0.5], physicsClientId=self.physicsClientId)
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 1.5], physicsClientId=self.physicsClientId)
@@ -256,7 +261,7 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
 
     def _reset(self):
         obs = super()._reset()
-        self.build_path()
+        # self.build_path()
         render = self.get_render_obs()
         return render
 
@@ -264,6 +269,12 @@ class HalfCheetahBulletEnvX(HalfCheetahBulletEnv):
 
         def __init__(self):
             HalfCheetahBulletEnv.__init__(self)
+            self.electricity_cost = -0.001 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+            self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+            self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+            self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
+            self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
+
             # self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
 
         def _get_obs(self):

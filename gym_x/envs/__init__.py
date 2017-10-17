@@ -15,3 +15,4 @@ from gym_x.envs.chain_vision_x import ChainEnvX, ChainVisionEnvX
 from gym_x.envs.gym_locomotion_envs_x import Walker2DBulletEnvX, Walker2DVisionBulletEnvX
 from gym_x.envs.gym_locomotion_envs_x import HalfCheetahBulletEnvX, HalfCheetahVisionBulletEnvX
 from gym_x.envs.gym_pendulum_envs_x import InvertedPendulumSwingupBulletEnvX, InvertedPendulumSwingupVisionBulletEnvX
+from gym_x.envs.gym_locomotion_envs_x import HopperBulletEnvX, HopperVisionBulletEnvX

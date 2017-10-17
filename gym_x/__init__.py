@@ -51,7 +51,7 @@ register(
     entry_point='gym_x.envs:Walker2DVisionBulletEnvX'
 )
 
-# HalfCheetah
+# Half Cheetah
 register(
     id='HalfCheetahBulletX-v0',
     entry_point='gym_x.envs:HalfCheetahBulletEnvX'
@@ -71,4 +71,14 @@ register(
 register(
     id='InvertedPendulumSwingupVisionBulletX-v0',
     entry_point='gym_x.envs:InvertedPendulumSwingupVisionBulletEnvX'
+
+# hopper
+register(
+    id='HopperBulletX-v0',
+    entry_point='gym_x.envs:HopperBulletEnvX'
+)
+
+register(
+    id='HopperVisionBulletX-v0',
+    entry_point='gym_x.envs:HopperVisionBulletEnvX'
 )

@@ -51,7 +51,12 @@ register(
     entry_point='gym_x.envs:Walker2DVisionBulletEnvX'
 )
 
-# half cheetah
+# Half Cheetah
+register(
+    id='HalfCheetahVisionBulletEnv-v0',
+    entry_point='gym_x.envs:HalfCheetahVisionBulletEnv'
+)
+
 register(
     id='HalfCheetahBulletX-v0',
     entry_point='gym_x.envs:HalfCheetahBulletEnvX'
@@ -60,6 +65,22 @@ register(
 register(
     id='HalfCheetahVisionBulletX-v0',
     entry_point='gym_x.envs:HalfCheetahVisionBulletEnvX'
+)
+
+# Inverted Pendulum
+register(
+    id='InvertedPendulumSwingupVisionBulletEnv-v0',
+    entry_point='gym_x.envs:InvertedPendulumSwingupVisionBulletEnv'
+)
+
+register(
+    id='InvertedPendulumSwingupBulletX-v0',
+    entry_point='gym_x.envs:InvertedPendulumSwingupBulletEnvX'
+)
+
+register(
+    id='InvertedPendulumSwingupVisionBulletX-v0',
+    entry_point='gym_x.envs:InvertedPendulumSwingupVisionBulletEnvX'
 )
 
 # hopper

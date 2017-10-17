@@ -172,9 +172,11 @@ class Walker2DVisionBulletEnvX(Walker2DBulletEnvX):
 
 
 class HopperBulletEnvX(HopperBulletEnv):
-        def __init__(self):
+        def __init__(self, max_episode_steps=500):
             HopperBulletEnv.__init__(self)
-            # self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
+            self.max_episode_steps = max_episode_steps
+            self.steps = 0
+            self.threshold = 1
 
         def _get_obs(self):
             return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
@@ -184,13 +186,20 @@ class HopperBulletEnvX(HopperBulletEnv):
             Duplicate of super class so that can modify rewards
             """
             obs, rew, done, info = super()._step(a)
-            # if self.robot.body_xyz[0] > 5:
-            #     rew = 1.0
-            # else:
-            #     rew = 0.0
+            # rew = +1 if past int threshold for first time in episode
+            if self.robot.body_xyz[0] > self.threshold:
+                self.threshold += 1
+                rew = 1.0
+            else:
+                rew = 0.0
+            self.steps += 1
+            if self.steps > self.max_episode_steps:
+                done = True
             return obs, rew, done, info
 
         def _reset(self):
+            self.steps = 0
+            self.threshold = 1
             state = super()._reset()
             return state
 
@@ -245,10 +254,10 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
 
     def build_path(self):
         p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
-        self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
-        ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
-        for i in ground_plane_mjcf:
-            p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
+        # self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
+        # ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
+        # for i in ground_plane_mjcf:
+            # p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
         for i in range(-2, 6):
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 0.5], physicsClientId=self.physicsClientId)
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 1.5], physicsClientId=self.physicsClientId)
@@ -262,25 +271,33 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
 
 class HalfCheetahBulletEnvX(HalfCheetahBulletEnv):
 
-        def __init__(self):
+        def __init__(self, max_episode_steps=500):
             HalfCheetahBulletEnv.__init__(self)
-            # self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
+            self.max_episode_steps = max_episode_steps
+            self.steps = 0
+            self.threshold = 1
 
-        def _get_obs(self):
-            return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
+        # def _get_obs(self):
+        #     return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
 
         def _step(self, a):
             """
             Duplicate of super class so that can modify rewards
             """
             obs, rew, done, info = super()._step(a)
-            # if self.robot.body_xyz[0] > 5:
-            #     rew = 1.0
-            # else:
-            #     rew = 0.0
+            if self.robot.body_xyz[0] > self.threshold:
+                rew = 1.0
+                self.threshold += 1
+            else:
+                rew = 0.0
+            self.steps += 1
+            if self.steps > self.max_episode_steps:
+                done = True
             return obs, rew, done, info
 
         def _reset(self):
+            self.steps = 0
+            self.threshold = 1
             state = super()._reset()
             return state
 

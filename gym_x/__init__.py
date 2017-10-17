@@ -51,6 +51,7 @@ register(
     entry_point='gym_x.envs:Walker2DVisionBulletEnvX'
 )
 
+# HalfCheetah
 register(
     id='HalfCheetahBulletX-v0',
     entry_point='gym_x.envs:HalfCheetahBulletEnvX'
@@ -59,4 +60,15 @@ register(
 register(
     id='HalfCheetahVisionBulletX-v0',
     entry_point='gym_x.envs:HalfCheetahVisionBulletEnvX'
+)
+
+# Inverted Pendulum
+register(
+    id='InvertedPendulumSwingupBulletX-v0',
+    entry_point='gym_x.envs:InvertedPendulumSwingupBulletEnvX'
+)
+
+register(
+    id='InvertedPendulumSwingupVisionBulletX-v0',
+    entry_point='gym_x.envs:InvertedPendulumSwingupVisionBulletEnvX'
 )

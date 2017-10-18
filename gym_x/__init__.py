@@ -53,6 +53,11 @@ register(
 
 # Half Cheetah
 register(
+    id='HalfCheetahVisionBulletEnv-v0',
+    entry_point='gym_x.envs:HalfCheetahVisionBulletEnv'
+)
+
+register(
     id='HalfCheetahBulletX-v0',
     entry_point='gym_x.envs:HalfCheetahBulletEnvX'
 )
@@ -63,6 +68,11 @@ register(
 )
 
 # Inverted Pendulum
+register(
+    id='InvertedPendulumSwingupVisionBulletEnv-v0',
+    entry_point='gym_x.envs:InvertedPendulumSwingupVisionBulletEnv'
+)
+
 register(
     id='InvertedPendulumSwingupBulletX-v0',
     entry_point='gym_x.envs:InvertedPendulumSwingupBulletEnvX'

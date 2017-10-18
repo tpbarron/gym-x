@@ -211,7 +211,7 @@ class HopperBulletEnvX(HopperBulletEnv):
 
 class HopperVisionBulletEnvX(HopperBulletEnvX):
 
-    def __init__(self, render_dims=(32, 32)):
+    def __init__(self, render_dims=(48, 48)):
         HopperBulletEnvX.__init__(self)
         self.render_dims = render_dims
         # The observation is a combination of joints and image

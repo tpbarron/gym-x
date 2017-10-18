@@ -211,7 +211,7 @@ class HopperBulletEnvX(HopperBulletEnv):
 
 class HopperVisionBulletEnvX(HopperBulletEnvX):
 
-    def __init__(self, render_dims=(48, 48)):
+    def __init__(self, render_dims=(64, 64)):
         HopperBulletEnvX.__init__(self)
         self.render_dims = render_dims
         # The observation is a combination of joints and image
@@ -242,12 +242,12 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
         rgb=img_arr[2] #color data RGB
         gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
         gray = gray.reshape((1, *self.render_dims))
-        gray[gray > 0] = 255
+        # gray[gray > 0] = 255
 
         # assign patch at bottom to show distance, this is to differentiate frames
-        bar_width_pix = int(y/5.0*self.render_dims[1])
-        bar_height_pix = 10
-        gray[0][self.render_dims[0]-bar_height_pix:, 0:bar_width_pix] = 255
+        # bar_width_pix = int(y/5.0*self.render_dims[1])
+        # bar_height_pix = 10
+        # gray[0][self.render_dims[0]-bar_height_pix:, 0:bar_width_pix] = 255
         return gray
 
     def _step(self, a):

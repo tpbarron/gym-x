@@ -71,6 +71,7 @@ register(
 register(
     id='InvertedPendulumSwingupVisionBulletX-v0',
     entry_point='gym_x.envs:InvertedPendulumSwingupVisionBulletEnvX'
+)
 
 # hopper
 register(

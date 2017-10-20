@@ -18,7 +18,7 @@ class AcrobotEnvX(acrobot.AcrobotEnv):
         super(AcrobotEnvX, self).__init__()
         if self.continuous:
             # torque from -1, 1
-            self.action_space = spaces.Box(-1., 1., shape = (1,))
+            self.action_space = spaces.Box(-np.inf, np.inf, shape = (1,))
         else:
             self.action_space = spaces.Discrete(3)
         self.max_episode_steps = max_episode_steps
@@ -60,6 +60,9 @@ class AcrobotEnvX(acrobot.AcrobotEnv):
         self.state = ns
         terminal = self._terminal()
         reward = 1. if terminal else 0.
+        # if continuous add cost on action magnitude
+        # if self.continuous:
+        #     reward -= 1e-5 * np.square(a).sum()
         # reward = -1. if not terminal else 0.
         if self.ep_step == self.max_episode_steps:
             terminal = True

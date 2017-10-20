@@ -212,13 +212,17 @@ class HopperBulletEnvX(HopperBulletEnv):
 
 class HopperVisionBulletEnvX(HopperBulletEnvX):
 
-    def __init__(self, render_dims=(64, 64)):
+    def __init__(self,
+                 render_dims=(64, 64),
+                 camera_type='fixed'):
+        """ Valid camera types are
+            'follow': move camera perfectly with robot
+            'fixed': do not move at all
+            'incremental': move when robot exits frame
+        """
         HopperBulletEnvX.__init__(self)
         self.render_dims = render_dims
-        # The observation is a combination of joints and image
-        # print (self.observation_space, self.observation_space.low, self.observation_space.high)
-        # self.observation_space = spaces.Tuple((spaces.Box(low=0, high=255, shape=(1, *render_dims)),
-        #                                         self.observation_space))
+        self.camera_type = camera_type
         self.observation_space = spaces.Box(low=0, high=255, shape=(1, *render_dims))
 
     def get_render_obs(self):
@@ -227,11 +231,17 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
         """
         x, y, z = self.robot.body_xyz
         # print (x, y, z)
-        cameraEyePosition = list([x, y-0.75, z])
-        cameraTargetPosition = [x, y, z]
+
+        if self.camera_type == 'follow':
+            cameraEyePosition = [x, y-0.75, z]
+            cameraTargetPosition = [x, y, z]
+        elif self.camera_type == 'fixed':
+            cameraEyePosition = [1.0, y-2.0, 1.0]
+            cameraTargetPosition = [1.0, y, 1.0]
+
         cameraUpVector = [0, 0, 1]
 
-        fov = 120
+        fov = 90
         aspect = self.render_dims[0] / self.render_dims[1]
         nearPlane = 0.05 # this ensures outside body, may see limbs
         farPlane = 100.0
@@ -243,7 +253,7 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
         rgb=img_arr[2] #color data RGB
         gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
         gray = gray.reshape((1, *self.render_dims))
-        # gray[gray > 0] = 255
+        gray[gray > 0] = 255
 
         # assign patch at bottom to show distance, this is to differentiate frames
         # bar_width_pix = int(y/5.0*self.render_dims[1])
@@ -257,22 +267,25 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
         """
         state, rew, done, info = super()._step(a)
         render = self.get_render_obs()
+        if self.robot.body_xyz[0] > 5.0:
+            done = True
         return render, rew, done, info
 
     def build_path(self):
         p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
-        # self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
-        # ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
-        # for i in ground_plane_mjcf:
-            # p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
-        for i in range(-2, 6):
+        self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
+        ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
+        for i in ground_plane_mjcf:
+            p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
+        for i in range(-5, 6):
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 0.5], physicsClientId=self.physicsClientId)
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 1.5], physicsClientId=self.physicsClientId)
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 2.5], physicsClientId=self.physicsClientId)
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 3.5], physicsClientId=self.physicsClientId)
 
     def _reset(self):
         obs = super()._reset()
-        # self.build_path()
+        self.build_path()
         render = self.get_render_obs()
         return render
 

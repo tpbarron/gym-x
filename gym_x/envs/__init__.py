@@ -12,7 +12,8 @@ from gym_x.envs.gym_mountain_car_x import MountainCarContinuousVisionEnvX
 
 # pybullet envs
 from gym_x.envs.chain_vision_x import ChainEnvX, ChainVisionEnvX
+from gym_x.envs.gym_locomotion_envs_x import AntBulletEnvX
 from gym_x.envs.gym_locomotion_envs_x import Walker2DBulletEnvX, Walker2DVisionBulletEnvX
 from gym_x.envs.gym_locomotion_envs_x import HalfCheetahVisionBulletEnv, HalfCheetahBulletEnvX, HalfCheetahVisionBulletEnvX
-from gym_x.envs.gym_pendulum_envs_x import InvertedPendulumSwingupVisionBulletEnv, InvertedPendulumSwingupBulletEnvX, InvertedPendulumSwingupVisionBulletEnvX
 from gym_x.envs.gym_locomotion_envs_x import HopperBulletEnvX, HopperVisionBulletEnvX
+from gym_x.envs.gym_pendulum_envs_x import InvertedPendulumSwingupVisionBulletEnv, InvertedPendulumSwingupBulletEnvX, InvertedPendulumSwingupVisionBulletEnvX

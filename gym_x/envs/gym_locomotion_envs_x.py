@@ -1,83 +1,84 @@
 import os
 import cv2
 import numpy as np
-import pybullet as p
-import pybullet_data
-from pybullet_envs.gym_locomotion_envs import Walker2DBulletEnv, HalfCheetahBulletEnv, HopperBulletEnv
+# import pybullet as p
+# import pybullet_data
+from pybullet_envs.gym_locomotion_envs import Walker2DBulletEnv, HalfCheetahBulletEnv, HopperBulletEnv, AntBulletEnv
 from gym import spaces
 
-class Walker2DBulletEnvX(Walker2DBulletEnv):
+class AntBulletEnvX(AntBulletEnv):
 
     def __init__(self):
-        Walker2DBulletEnv.__init__(self)
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
+        AntBulletEnv.__init__(self)
+        self.electricity_cost = -0.25 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+        # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+        # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+        # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
+        # self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
 
-    def _get_obs(self):
-        return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
+    # def _get_obs(self):
+    #     return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
 
     def _step(self, a):
         """
         Duplicate of super class so that can modify rewards
         """
+        # potential_old = self.potential
         obs, rew, done, info = super()._step(a)
-        if self.robot.body_xyz[0] > 5:
-            rew = 1.0
-        else:
-            rew = 0.0
+        # state = self.robot.calc_state()
+        # alive = float(self.robot.alive_bonus(state[0]+self.robot.initial_z, self.robot.body_rpy[1]))
+        # alive *= 0.05
+        # cost = 0.01 * -np.square(a).sum()
+        # progress = float(self.potential - potential_old)
+        # # print ("Rewarsd", alive, progress)
+        # rew = alive + progress + cost
+        # # if self.robot.body_xyz[0] > 5:
+        # #     rew = 1.0
+        # # else:
+        # #     rew = 0.0
+        # # print ("ROBOT: ", self.robot.body_xyz[2] < 0.3)
+        # # if done:
+        # #     print ("DONE")
         return obs, rew, done, info
 
-        # if not self.scene.multiplayer:
-        #     # if multiplayer, action first applied to all robots,
-        #     # then global step() called, then _step() for all robots with the same actions
-        #     self.robot.apply_action(a)
-        #     self.scene.global_step()
-        #
-        # state = self.get_state()
-        # _ = self.robot.calc_state()  # also calculates self.joints_at_limit
-        # # state[0] is body height above ground, body_rpy[1] is pitch
-        # # if self.robot.initial_z is None:
-        # #     self.robot.initial_z = self.robot.body_xyz[2]
-        # # body_height = self.body_xyz[2] - self.initial_z
-        # # print (self.robot.body_xyz)
-        # alive = float(self.robot.alive_bonus(self.robot.body_xyz[2], self.robot.body_rpy[1]))
-        # # print ("alive: ", alive)
-        # done = alive < 0
-        # if not np.isfinite(state).all():
-        #     print("~INF~", state)
-        #     done = True
-        #
+    def _reset(self):
+        state = super()._reset()
+        return state
+
+class Walker2DBulletEnvX(Walker2DBulletEnv):
+
+    def __init__(self):
+        Walker2DBulletEnv.__init__(self)
+        # self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
+        self.electricity_cost = -0.5 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+        # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+        # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+        # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
+        # self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
+
+    # def _get_obs(self):
+    #     return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
+
+    def _step(self, a):
+        """
+        Duplicate of super class so that can modify rewards
+        """
         # potential_old = self.potential
-        # self.potential = self.robot.calc_potential()
+        obs, rew, done, info = super()._step(a)
+        # state = self.robot.calc_state()
+        # alive = float(self.robot.alive_bonus(state[0]+self.robot.initial_z, self.robot.body_rpy[1]))
+        # alive *= 0.01
+
+        # cost = 0.001 * -np.square(a).sum()
+
         # progress = float(self.potential - potential_old)
-        # # NOTE: progress = 0 in expl case
-        # feet_collision_cost = 0.
-        #
-        # electricity_cost = 0 # self.electricity_cost  * float(np.abs(a*self.robot.joint_speeds).mean())  # let's assume we have DC motor with controller, and reverse current braking
-        # electricity_cost += self.stall_torque_cost * float(np.square(a).sum())
-        #
-        # joints_at_limit_cost = 0 #float(self.joints_at_limit_cost * self.robot.joints_at_limit)
-        # debugmode=0
-        # if(debugmode):
-        #     print("alive=", alive)
-        #     print("progress=",progress)
-        #     print("electricity_cost=",electricity_cost)
-        #     print("joints_at_limit_cost=",joints_at_limit_cost)
-        #     print("feet_collision_cost=",feet_collision_cost)
-        #
-        # self.rewards = [
-        #     alive,
-        #     progress,
-        #     electricity_cost,
-        #     joints_at_limit_cost,
-        #     feet_collision_cost
-        # ]
-        # if (debugmode):
-        #     print("rewards=",self.rewards)
-        #     print("sum rewards=",sum(self.rewards))
-        #
-        # self.HUD(state, a, done)
-        # self.reward += sum(self.rewards)
-        # return state, sum(self.rewards), bool(done), {}
+        # print ("Rewarsd", alive, progress)
+        # rew = alive + progress + cost
+        # if self.robot.body_xyz[0] > 5:
+        #     rew = 1.0
+        # else:
+        #     rew = 0.0
+        return obs, rew, done, info
 
     def _reset(self):
         state = super()._reset()

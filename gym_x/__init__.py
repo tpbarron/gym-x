@@ -40,6 +40,11 @@ register(
     entry_point='gym_x.envs:ChainEnvX'
 )
 
+register(
+    id='AntBulletX-v0',
+    entry_point='gym_x.envs:AntBulletEnvX'
+)
+
 # Walker2d
 register(
     id='Walker2DBulletX-v0',

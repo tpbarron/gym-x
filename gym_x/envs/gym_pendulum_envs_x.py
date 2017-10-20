@@ -7,16 +7,17 @@ from pybullet_envs.gym_pendulum_envs import InvertedPendulumSwingupBulletEnv
 
 class InvertedPendulumSwingupVisionBulletEnv(InvertedPendulumSwingupBulletEnv):
 
-    def __init__(self, render_dims=(32, 32)):
-        InvertedPendulumSwingupBulletEnv.__init__(self)
+    def __init__(self, render_dims=(64, 64)):
+        super(InvertedPendulumSwingupVisionBulletEnv, self).__init__()
+        # InvertedPendulumSwingupBulletEnv.__init__(self)
         self.observation_space = spaces.Box(low=0, high=255, shape=(1, *render_dims))
         self.render_dims = render_dims
 
     def get_render_obs(self):
         x, y, z = self.robot.robot_body.current_position() #self.robot.body_xyz
         # print (x, y, z)
-        cameraEyePosition = list([x, y-0.65, 0.])
-        cameraTargetPosition = [x, y, 0.0]
+        cameraEyePosition = list([0, y-0.65, 0.])
+        cameraTargetPosition = [0, y, 0.0]
         cameraUpVector = [0, 0, 1]
 
         fov = 120
@@ -38,7 +39,7 @@ class InvertedPendulumSwingupVisionBulletEnv(InvertedPendulumSwingupBulletEnv):
         return gray
 
     def _step(self, a):
-        obs, rew, done, info = InvertedPendulumSwingupBulletEnv._step(self, a)
+        obs, rew, done, info = super()._step(a)
         render = self.get_render_obs()
         # print ("Reward: ", rew)
         # if done:

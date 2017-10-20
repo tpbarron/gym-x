@@ -172,20 +172,20 @@ class Walker2DVisionBulletEnvX(Walker2DBulletEnvX):
 
 
 class HopperBulletEnvX(HopperBulletEnv):
-        def __init__(self, max_episode_steps=500):
+        def __init__(self):
             HopperBulletEnv.__init__(self)
             # self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
-            self.electricity_cost = -0.001 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
-            self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
-            self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
-            self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
-            self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
-            self.max_episode_steps = max_episode_steps
-            self.steps = 0
-            self.threshold = 1
+            self.electricity_cost = -0.5 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+            # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+            # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+            # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
+            # self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
+            # self.max_episode_steps = max_episode_steps
+            # self.steps = 0
+            # self.threshold = 1
 
-        def _get_obs(self):
-            return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
+        # def _get_obs(self):
+        #     return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
 
         def _step(self, a):
             """
@@ -204,8 +204,6 @@ class HopperBulletEnvX(HopperBulletEnv):
             return obs, rew, done, info
 
         def _reset(self):
-            # self.steps = 0
-            # self.threshold = 1
             state = super()._reset()
             return state
 
@@ -359,17 +357,17 @@ class HalfCheetahVisionBulletEnv(HalfCheetahBulletEnv):
 
 class HalfCheetahBulletEnvX(HalfCheetahBulletEnv):
 
-        def __init__(self, max_episode_steps=500):
+        def __init__(self):
             HalfCheetahBulletEnv.__init__(self)
 
-            self.electricity_cost = -0.001 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
-            self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
-            self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
-            self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
-            self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
-            self.max_episode_steps = max_episode_steps
-            self.steps = 0
-            self.threshold = 1
+            self.electricity_cost = -0.05 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+            # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+            # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+            # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
+            # self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
+            # self.max_episode_steps = max_episode_steps
+            # self.steps = 0
+            # self.threshold = 1
 
         # def _get_obs(self):
         #     return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
@@ -379,19 +377,19 @@ class HalfCheetahBulletEnvX(HalfCheetahBulletEnv):
             Duplicate of super class so that can modify rewards
             """
             obs, rew, done, info = super()._step(a)
-            if self.robot.body_xyz[0] > self.threshold:
-                rew = 1.0
-                self.threshold += 1
-            else:
-                rew = 0.0
-            self.steps += 1
-            if self.steps > self.max_episode_steps:
-                done = True
+            # if self.robot.body_xyz[0] > self.threshold:
+            #     rew = 1.0
+            #     self.threshold += 1
+            # else:
+            #     rew = 0.0
+            # self.steps += 1
+            # if self.steps > self.max_episode_steps:
+            #     done = True
             return obs, rew, done, info
 
         def _reset(self):
-            self.steps = 0
-            self.threshold = 1
+            # self.steps = 0
+            # self.threshold = 1
             state = super()._reset()
             return state
 

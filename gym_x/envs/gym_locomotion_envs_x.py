@@ -212,11 +212,11 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
 
     def __init__(self,
                  render_dims=(64, 64),
-                 camera_type='fixed'):
+                 camera_type='follow'):
         """ Valid camera types are
             'follow': move camera perfectly with robot
             'fixed': do not move at all
-            'incremental': move when robot exits frame
+            'incremental': move when robot exits frame (not implemented)
         """
         HopperBulletEnvX.__init__(self)
         self.render_dims = render_dims
@@ -230,12 +230,12 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
         x, y, z = self.robot.body_xyz
         # print (x, y, z)
 
-        # if self.camera_type == 'follow':
-        cameraEyePosition = [x, y-1.25, 1.0]
-        cameraTargetPosition = [x, y, 1.0]
-        # elif self.camera_type == 'fixed':
-        #     cameraEyePosition = [1.0, y-2.0, 1.0]
-        #     cameraTargetPosition = [1.0, y, 1.0]
+        if self.camera_type == 'follow':
+            cameraEyePosition = [x, y-1.25, 1.0]
+            cameraTargetPosition = [x, y, 1.0]
+        elif self.camera_type == 'fixed':
+            cameraEyePosition = [2.0, y-2.5, 1.0]
+            cameraTargetPosition = [2.0, y, 1.0]
 
         cameraUpVector = [0, 0, 1]
 
@@ -265,7 +265,7 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
         """
         state, rew, done, info = super()._step(a)
         render = self.get_render_obs()
-        if self.robot.body_xyz[0] > 5.0:
+        if self.camera_type == 'fixed' and self.robot.body_xyz[0] > 4.0:
             done = True
         return render, rew, done, info
 
@@ -287,74 +287,6 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
         render = self.get_render_obs()
         return render
 
-
-class HalfCheetahVisionBulletEnv(HalfCheetahBulletEnv):
-
-    def __init__(self, render_dims=(32, 32)):
-        HalfCheetahBulletEnv.__init__(self)
-        self.render_dims = render_dims
-        # The observation is a combination of joints and image
-        # print (self.observation_space, self.observation_space.low, self.observation_space.high)
-        # self.observation_space = spaces.Tuple((spaces.Box(low=0, high=255, shape=(1, *render_dims)),
-        #                                         self.observation_space))
-        self.observation_space = spaces.Box(low=0, high=255, shape=(1, *render_dims))
-
-    def get_render_obs(self):
-        """
-        Compute first-person view from robot
-        """
-        x, y, z = self.robot.body_xyz
-        # print (x, y, z)
-        cameraEyePosition = list([x, y-0.75, z])
-        cameraTargetPosition = [x, y, z]
-        cameraUpVector = [0, 0, 1]
-
-        fov = 120
-        aspect = self.render_dims[0] / self.render_dims[1]
-        nearPlane = 0.05 # this ensures outside body, may see limbs
-        farPlane = 100.0
-
-        viewMatrix = p.computeViewMatrix(cameraEyePosition, cameraTargetPosition, cameraUpVector, physicsClientId=self.physicsClientId)
-        projectionMatrix = p.computeProjectionMatrixFOV(fov, aspect, nearPlane, farPlane);
-        img_arr = p.getCameraImage(self.render_dims[0], self.render_dims[1], viewMatrix, projectionMatrix, renderer=p.ER_BULLET_HARDWARE_OPENGL, physicsClientId=self.physicsClientId)
-
-        rgb=img_arr[2] #color data RGB
-        gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
-        gray = gray.reshape((1, *self.render_dims))
-        gray[gray > 0] = 255
-
-        # assign patch at bottom to show distance, this is to differentiate frames
-        bar_width_pix = int(y/5.0*self.render_dims[1])
-        bar_height_pix = 10
-        gray[0][self.render_dims[0]-bar_height_pix:, 0:bar_width_pix] = 255
-        return gray
-
-    def _step(self, a):
-        """
-        Duplicate of super class so that can modify rewards
-        """
-        state, rew, done, info = super()._step(a)
-        render = self.get_render_obs()
-        return render, rew, done, info
-
-    def build_path(self):
-        # print (pybullet_data.getDataPath())
-        # p.setAdditionalSearchPath(pybullet_data.getDataPath()) #used by loadURDF
-        p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
-        # self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
-        # ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
-        # for i in ground_plane_mjcf:
-            # p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
-        for i in range(-2, 6):
-            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 0.5], physicsClientId=self.physicsClientId)
-            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 1.5], physicsClientId=self.physicsClientId)
-            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 2.5], physicsClientId=self.physicsClientId)
-
-    def _reset(self):
-        obs = super()._reset()
-        # self.build_path()
-        render = self.get_render_obs()
-        return render
 
 class HalfCheetahBulletEnvX(HalfCheetahBulletEnv):
 
@@ -396,9 +328,12 @@ class HalfCheetahBulletEnvX(HalfCheetahBulletEnv):
 
 class HalfCheetahVisionBulletEnvX(HalfCheetahBulletEnvX):
 
-    def __init__(self, render_dims=(32, 32)):
-        HalfCheetahBulletEnvX.__init__(self)
+    def __init__(self,
+                 render_dims=(64, 64),
+                 camera_type='fixed'):
+        HalfCheetahBulletEnv.__init__(self)
         self.render_dims = render_dims
+        self.camera_type = camera_type
         # The observation is a combination of joints and image
         # print (self.observation_space, self.observation_space.low, self.observation_space.high)
         # self.observation_space = spaces.Tuple((spaces.Box(low=0, high=255, shape=(1, *render_dims)),
@@ -410,12 +345,18 @@ class HalfCheetahVisionBulletEnvX(HalfCheetahBulletEnvX):
         Compute first-person view from robot
         """
         x, y, z = self.robot.body_xyz
-        # print (x, y, z)
-        cameraEyePosition = list([x, y-0.75, z])
-        cameraTargetPosition = [x, y, z]
+
+        if self.camera_type == 'follow':
+            cameraEyePosition = [x, y-1.25, 1.0]
+            cameraTargetPosition = [x, y, 1.0]
+        elif self.camera_type == 'fixed':
+            # y-2.7 not 2.5 since cheetah is longer
+            cameraEyePosition = [2.0, y-2.7, 1.0]
+            cameraTargetPosition = [2.0, y, 1.0]
+
         cameraUpVector = [0, 0, 1]
 
-        fov = 120
+        fov = 90
         aspect = self.render_dims[0] / self.render_dims[1]
         nearPlane = 0.05 # this ensures outside body, may see limbs
         farPlane = 100.0
@@ -430,9 +371,9 @@ class HalfCheetahVisionBulletEnvX(HalfCheetahBulletEnvX):
         gray[gray > 0] = 255
 
         # assign patch at bottom to show distance, this is to differentiate frames
-        bar_width_pix = int(y/5.0*self.render_dims[1])
-        bar_height_pix = 10
-        gray[0][self.render_dims[0]-bar_height_pix:, 0:bar_width_pix] = 255
+        # bar_width_pix = int(y/5.0*self.render_dims[1])
+        # bar_height_pix = 10
+        # gray[0][self.render_dims[0]-bar_height_pix:, 0:bar_width_pix] = 255
         return gray
 
     def _step(self, a):
@@ -441,24 +382,26 @@ class HalfCheetahVisionBulletEnvX(HalfCheetahBulletEnvX):
         """
         state, rew, done, info = super()._step(a)
         render = self.get_render_obs()
+        if self.camera_type == 'fixed' and self.robot.body_xyz[0] > 4.0:
+            done = True
         return render, rew, done, info
 
     def build_path(self):
         # print (pybullet_data.getDataPath())
         # p.setAdditionalSearchPath(pybullet_data.getDataPath()) #used by loadURDF
         p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
-        # self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
-        # ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
-        # for i in ground_plane_mjcf:
-            # p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
-        for i in range(-2, 6):
+        self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.0005], physicsClientId=self.physicsClientId)
+        ground_plane_mjcf = p.loadMJCF("ground_plane.xml") # at 0, 0, 0.001
+        for i in ground_plane_mjcf:
+            p.changeVisualShape(i,-1,rgbaColor=[0,0,0,0])
+        for i in range(-5, 6):
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 0.5], physicsClientId=self.physicsClientId)
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 1.5], physicsClientId=self.physicsClientId)
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 2.5], physicsClientId=self.physicsClientId)
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 3.5], physicsClientId=self.physicsClientId)
 
     def _reset(self):
         obs = super()._reset()
         self.build_path()
         render = self.get_render_obs()
         return render
-        # return (render, obs)

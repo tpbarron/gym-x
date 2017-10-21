@@ -1,7 +1,7 @@
 import os
 import cv2
 import numpy as np
-# import pybullet as p
+import pybullet as p
 # import pybullet_data
 from pybullet_envs.gym_locomotion_envs import Walker2DBulletEnv, HalfCheetahBulletEnv, HopperBulletEnv, AntBulletEnv
 from gym import spaces
@@ -230,12 +230,12 @@ class HopperVisionBulletEnvX(HopperBulletEnvX):
         x, y, z = self.robot.body_xyz
         # print (x, y, z)
 
-        if self.camera_type == 'follow':
-            cameraEyePosition = [x, y-0.75, z]
-            cameraTargetPosition = [x, y, z]
-        elif self.camera_type == 'fixed':
-            cameraEyePosition = [1.0, y-2.0, 1.0]
-            cameraTargetPosition = [1.0, y, 1.0]
+        # if self.camera_type == 'follow':
+        cameraEyePosition = [x, y-1.25, 1.0]
+        cameraTargetPosition = [x, y, 1.0]
+        # elif self.camera_type == 'fixed':
+        #     cameraEyePosition = [1.0, y-2.0, 1.0]
+        #     cameraTargetPosition = [1.0, y, 1.0]
 
         cameraUpVector = [0, 0, 1]
 
@@ -361,7 +361,7 @@ class HalfCheetahBulletEnvX(HalfCheetahBulletEnv):
         def __init__(self):
             HalfCheetahBulletEnv.__init__(self)
 
-            self.electricity_cost = -0.05 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+            self.electricity_cost = -0.5 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
             # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
             # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
             # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects

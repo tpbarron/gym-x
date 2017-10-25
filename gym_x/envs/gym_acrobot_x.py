@@ -18,7 +18,7 @@ class AcrobotEnvX(acrobot.AcrobotEnv):
         super(AcrobotEnvX, self).__init__()
         if self.continuous:
             # torque from -1, 1
-            self.action_space = spaces.Box(-np.inf, np.inf, shape = (1,))
+            self.action_space = spaces.Box(-1., 1., shape = (1,))
         else:
             self.action_space = spaces.Discrete(3)
         self.max_episode_steps = max_episode_steps

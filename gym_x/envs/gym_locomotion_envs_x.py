@@ -10,11 +10,17 @@ class AntBulletEnvX(AntBulletEnv):
 
     def __init__(self):
         AntBulletEnv.__init__(self)
-        self.electricity_cost = -0.25 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
-        # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
-        # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+        self.electricity_cost = -0.1 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+        self.stall_torque_cost = -0.001 #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+        self.foot_collision_cost  = -1.0 #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
         # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
-        # self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
+        self.joints_at_limit_cost = -0.1
+
+        # self.electricity_cost = -0.25 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+        # # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+        # # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+        # # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
+        # # self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
 
     # def _get_obs(self):
     #     return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()
@@ -175,15 +181,21 @@ class Walker2DVisionBulletEnvX(Walker2DBulletEnvX):
 class HopperBulletEnvX(HopperBulletEnv):
         def __init__(self):
             HopperBulletEnv.__init__(self)
-            # self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
-            self.electricity_cost = -0.5 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
-            # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
-            # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+            self.electricity_cost = -0.1 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+            self.stall_torque_cost = -0.001 #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+            self.foot_collision_cost  = -1.0 #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
             # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
-            # self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
-            # self.max_episode_steps = max_episode_steps
-            # self.steps = 0
-            # self.threshold = 1
+            self.joints_at_limit_cost = -0.1
+
+            # # self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(22,))
+            # self.electricity_cost = -0.5 #2.0	# cost for using motors -- this parameter should be carefully tuned against reward for making progress, other values less improtant
+            # # self.stall_torque_cost = 0. #-0.1	# cost for running electric current through a motor even at zero rotational speed, small
+            # # self.foot_collision_cost  = 0. #-1.0	# touches another leg, or other objects, that cost makes robot avoid smashing feet into itself
+            # # self.foot_ground_object_names = set(["floor"])  # to distinguish ground and other objects
+            # # self.joints_at_limit_cost = 0. #-0.1	# discourage stuck joints
+            # # self.max_episode_steps = max_episode_steps
+            # # self.steps = 0
+            # # self.threshold = 1
 
         # def _get_obs(self):
         #     return np.array([j.current_relative_position() for j in self.robot.ordered_joints], dtype=np.float32).flatten()

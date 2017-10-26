@@ -1,6 +1,7 @@
 
 import pybullet as p
 import cv2
+import os
 import numpy as np
 from gym import spaces
 from pybullet_envs.gym_pendulum_envs import InvertedPendulumSwingupBulletEnv
@@ -35,8 +36,21 @@ class InvertedPendulumSwingupVisionBulletEnv(InvertedPendulumSwingupBulletEnv):
         rgb=img_arr[2] #color data RGB
         gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
         gray = gray.reshape((1, *self.render_dims))
-        # gray[gray > 0] = 255
+        gray[gray > 0] = 255
         return gray
+
+    def build_path(self):
+        # print (pybullet_data.getDataPath())
+        # p.setAdditionalSearchPath(pybullet_data.getDataPath()) #used by loadURDF
+        p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
+        # self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.001], physicsClientId=self.physicsClientId)
+
+        for i in range(-2, 3):
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, -1.5], physicsClientId=self.physicsClientId)
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, -0.5], physicsClientId=self.physicsClientId)
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 0.5], physicsClientId=self.physicsClientId)
+            self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, 1.5], physicsClientId=self.physicsClientId)
+
 
     def _step(self, a):
         obs, rew, done, info = super()._step(a)
@@ -48,6 +62,7 @@ class InvertedPendulumSwingupVisionBulletEnv(InvertedPendulumSwingupBulletEnv):
 
     def _reset(self):
         obs = super()._reset()
+        self.build_path()
         render = self.get_render_obs()
         return render
 

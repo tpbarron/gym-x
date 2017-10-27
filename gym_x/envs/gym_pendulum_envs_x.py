@@ -17,8 +17,8 @@ class InvertedPendulumSwingupVisionBulletEnv(InvertedPendulumSwingupBulletEnv):
     def get_render_obs(self):
         x, y, z = self.robot.robot_body.current_position() #self.robot.body_xyz
         # print (x, y, z)
-        cameraEyePosition = list([0, y-0.65, 0.])
-        cameraTargetPosition = [0, y, 0.0]
+        cameraEyePosition = list([x, y-0.5, 0.])
+        cameraTargetPosition = [x, y, 0.0]
         cameraUpVector = [0, 0, 1]
 
         fov = 120
@@ -43,7 +43,7 @@ class InvertedPendulumSwingupVisionBulletEnv(InvertedPendulumSwingupBulletEnv):
         # print (pybullet_data.getDataPath())
         # p.setAdditionalSearchPath(pybullet_data.getDataPath()) #used by loadURDF
         p.setAdditionalSearchPath(os.path.join(os.path.dirname(__file__), "assets/")) #used by loadURDF
-        # self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, 0.001], physicsClientId=self.physicsClientId)
+        self.plane_id = p.loadURDF("plane_black.urdf", basePosition=[0, 0, -2.0], physicsClientId=self.physicsClientId)
 
         for i in range(-2, 3):
             self.cube_id = p.loadURDF("cube_black.urdf", basePosition=[i, 1, -1.5], physicsClientId=self.physicsClientId)

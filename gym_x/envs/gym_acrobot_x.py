@@ -80,12 +80,12 @@ from gym_x.wrappers import VisionEnv
 
 def make_acrobot_vision_env_x():
     env = AcrobotEnvX()
-    env = VisionEnv(env, downsample=(48, 48), framestack=1)
+    env = VisionEnv(env, downsample=(32, 32), framestack=1)
     return env
 
 def make_acrobot_vision_continuous_env_x():
     env = AcrobotContinuousEnvX()
-    env = VisionEnv(env, downsample=(48, 48), framestack=1)
+    env = VisionEnv(env, downsample=(32, 32), framestack=1)
     return env
 
 AcrobotVisionEnvX = make_acrobot_vision_env_x

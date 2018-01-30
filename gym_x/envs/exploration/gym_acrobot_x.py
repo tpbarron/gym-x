@@ -61,9 +61,9 @@ class AcrobotEnvX(acrobot.AcrobotEnv):
         terminal = self._terminal()
         reward = 1. if terminal else 0.
         # if continuous add cost on action magnitude
-        # if self.continuous:
-        #     reward -= 1e-5 * np.square(a).sum()
-        # reward = -1. if not terminal else 0.
+        if self.continuous:
+            reward -= 1e-5 * np.square(a).sum()
+        reward = -1. if not terminal else 0.
         if self.ep_step == self.max_episode_steps:
             terminal = True
         return (self._get_ob(), reward, terminal, {})

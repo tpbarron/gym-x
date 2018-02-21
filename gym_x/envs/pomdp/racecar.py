@@ -3,29 +3,29 @@ import numpy as np
 import copy
 import math
 
-class Racecar:
+class Racecar(object):
 
-    def __init__(self, bullet_client, urdfRootPath='', timeStep=0.01, lod=0):
+    def __init__(self, bullet_client, position=[0, 0, 0.2], orientation=[0, 0, 0, 1], urdfRootPath='', timeStep=0.01):
         self.urdfRootPath = urdfRootPath
         self.timeStep = timeStep
         self._p = bullet_client
-        self.lod = lod
+        self.position = position
+        self.orientation = orientation
         self.reset()
 
     def reset(self):
-        if self.lod > 0:
-            zorient = np.random.random() / 5. - 0.1
-            ystart = np.random.random() / 2. - 0.25
-        else:
-            zorient = 0
-            ystart = 0
-        car = self._p.loadURDF(os.path.join(self.urdfRootPath,"racecar/racecar_differential.urdf"), basePosition=[0,ystart,.2], baseOrientation=[0., 0., zorient, 1.], useFixedBase=False)
+        # zorient = 0
+        ystart = 0
+        car = self._p.loadURDF(os.path.join(self.urdfRootPath, "racecar/racecar_differential.urdf"),
+                               basePosition=self.position,
+                               baseOrientation=self.orientation, #[0.0, 0.0, self.zorientation, 1.0],
+                               useFixedBase=False)
         self.racecarUniqueId = car
         #for i in range (self._p.getNumJoints(car)):
         #    print (self._p.getJointInfo(car,i))
         for wheel in range(self._p.getNumJoints(car)):
-                self._p.setJointMotorControl2(car,wheel,self._p.VELOCITY_CONTROL,targetVelocity=0,force=0)
-                self._p.getJointInfo(car,wheel)
+                self._p.setJointMotorControl2(car, wheel, self._p.VELOCITY_CONTROL, targetVelocity=0.0, force=0.0)
+                self._p.getJointInfo(car, wheel)
 
         #self._p.setJointMotorControl2(car,10,self._p.VELOCITY_CONTROL,targetVelocity=1,force=10)
         c = self._p.createConstraint(car,9,car,11,jointType=self._p.JOINT_GEAR,jointAxis =[0,1,0],parentFramePosition=[0,0,0],childFramePosition=[0,0,0])
@@ -74,14 +74,8 @@ class Racecar:
         return observation
 
     def applyAction(self, motorCommands):
-        targetVelocity=motorCommands[0]*self.speedMultiplier
-        #print("targetVelocity")
-        #print(targetVelocity)
-        steeringAngle = motorCommands[1]*self.steeringMultiplier
-        #print("steeringAngle")
-        #print(steeringAngle)
-        #print("maxForce")
-        #print(self.maxForce)
+        targetVelocity = motorCommands[0] * self.speedMultiplier
+        steeringAngle = motorCommands[1] * self.steeringMultiplier
 
         for motor in self.motorizedwheels:
             self._p.setJointMotorControl2(self.racecarUniqueId,motor,self._p.VELOCITY_CONTROL,targetVelocity=targetVelocity,force=self.maxForce)

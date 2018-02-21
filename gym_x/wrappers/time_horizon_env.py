@@ -15,12 +15,12 @@ class TimeHorizonEnv(gym.Wrapper):
 
     def reset(self):
         self.t = 0
-        ret = self.env._reset()
+        ret = self.env.reset()
         return ret
 
     def step(self, action):
         self.t += 1
-        next_obs, rew, done, info = self.env._step(action)
+        next_obs, rew, done, info = self.env.step(action)
         if self.t >= self.horizon:
             done = True
         return next_obs, rew, done, info

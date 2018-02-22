@@ -35,7 +35,7 @@ class TMazeRacecarGymEnv(gym.Env):
 
     def __init__(self,
                  urdf_root=pybullet_data.getDataPath(),
-                 action_repeat=25,
+                 action_repeat=10,
                  # action_repeat=50,
                  is_enable_self_collision=True,
                  is_discrete=False,
@@ -45,8 +45,10 @@ class TMazeRacecarGymEnv(gym.Env):
                  deterministic=False,
                  alternate=True,
                  r_type='neg_dist',
-                 map_type='tmaze'): # tmaze or grid
-        self.time_step = 0.005
+                 map_type='tmaze', # tmaze or grid
+                 randomize_start=True,
+                 randomize_signals=False):
+        self.time_step = 0.01
         # self.time_step = 0.005
         self.urdf_root = urdf_root
         self.action_repeat = action_repeat
@@ -59,7 +61,7 @@ class TMazeRacecarGymEnv(gym.Env):
         else:
             self.p = bullet_client.BulletClient()
 
-        observation_dim = 23 #14 #5
+        observation_dim = 27 #14 #5
         observation_high = np.ones(observation_dim) * 1000 #np.inf
 
         if (is_discrete):
@@ -77,6 +79,8 @@ class TMazeRacecarGymEnv(gym.Env):
         self.deterministic = deterministic
         self.alternate = alternate
         self.map_type = map_type
+        self.randomize_start = randomize_start
+        self.randomize_signals = randomize_signals
 
         self.wall_block_ids = []
         self.signal_block_ids = set()
@@ -257,10 +261,13 @@ class TMazeRacecarGymEnv(gym.Env):
         dy = grid_pos2[1] - grid_pos1[1]
 
         # need 2.5 block shift toward pos2
+        rand = 1 if self.randomize_signals else 0
+        delta = rand * np.random.randint(3)
+
         if dx != 0:
-            block_pos[0] += np.sign(dx) * 2.5
+            block_pos[0] += np.sign(dx) * (2.5 + delta)
         elif dy != 0:
-            block_pos[1] += np.sign(dy) * 2.5
+            block_pos[1] += np.sign(dy) * (2.5 + delta)
 
         if turn_dir == 0:
             # left
@@ -374,7 +381,7 @@ class TMazeRacecarGymEnv(gym.Env):
 
     def reset(self):
         self.p.resetSimulation()
-        #p.setPhysicsEngineParameter(numSolverIterations=300)
+        self.p.setPhysicsEngineParameter(numSolverIterations=10)
         self.p.setTimeStep(self.time_step)
         stadiumobjects = self.p.loadSDF(os.path.join(self.urdf_root,"stadium.sdf"))
         #move the stadium objects slightly above 0
@@ -389,12 +396,19 @@ class TMazeRacecarGymEnv(gym.Env):
             print ("PATH: ", path)
             car_position = self.get_grid_position(path[0])
             car_position.append(0.2) # z
-            print (car_position)
+            # print (car_position)
+            if self.randomize_start:
+                car_position[0] += np.random.random() - 0.5
+                car_position[1] += np.random.random() - 0.5
             car_orient = self.get_starting_orientation(path)
-            print (car_orient)
+            # print (car_orient)
             self.racecar = racecar.Racecar(self.p, position=car_position, orientation=car_orient, urdfRootPath=self.urdf_root, timeStep=self.time_step)
         elif self.map_type == 'tmaze':
-            self.racecar = racecar.Racecar(self.p, urdfRootPath=self.urdf_root, timeStep=self.time_step)
+            car_position = [0, 0, 0.2]
+            if self.randomize_start:
+                car_position[0] += np.random.random() - 0.5
+                car_position[1] += np.random.random() - 0.5
+            self.racecar = racecar.Racecar(self.p, position=car_position, urdfRootPath=self.urdf_root, timeStep=self.time_step)
 
         self.env_step_counter = 0
         for i in range(100):
@@ -411,11 +425,12 @@ class TMazeRacecarGymEnv(gym.Env):
         # Build after switch so can set colored block
         if self.map_type == 'tmaze':
             self.build_tmaze()
-            self.goal = np.array([self.length, self.switch])
+            self.goal = np.array([self.length+0.5, self.switch*2])
         elif self.map_type == 'grid':
             self.build_grid(path)
             self.goal = self.get_grid_position(path[-1]) #p.array([self.length, self.switch])
 
+        print ("Goal: ", self.goal)
         observation = self.get_extended_observation()
         self.max_x, self.min_y, self.max_y = 0, 0, 0
         return np.array(observation)
@@ -503,7 +518,7 @@ class TMazeRacecarGymEnv(gym.Env):
         self.racecar.applyAction(realaction)
         for i in range(self.action_repeat):
             self.p.stepSimulation()
-            # if self._renders:
+            # if self.renders:
             #     time.sleep(self.time_step)
             # self._observation = self.getExtendedObservation()
 
@@ -554,7 +569,7 @@ class TMazeRacecarGymEnv(gym.Env):
         carpos, carorn = self.p.getBasePositionAndOrientation(self.racecar.racecarUniqueId)
         x, y, z = carpos
 
-        if self.map_type == 'grid':
+        if self.map_type == 'grid' or self.map_type == 'tmaze':
             if x > self.goal[0] - 1.0 and x < self.goal[0] + 1.0:
                 if y > self.goal[1] - 1.0 and y < self.goal[1] + 1.0:
                     return True, False
@@ -726,7 +741,7 @@ class TMazeRacecarGymEnv(gym.Env):
 
 from itertools import count
 if __name__ == '__main__':
-    env = TMazeRacecarGymEnv(is_discrete=True, renders=True, length=10, alternate=True, map_type='grid')
+    env = TMazeRacecarGymEnv(is_discrete=True, renders=True, length=10, alternate=True, map_type='grid', randomize_start=True, randomize_signals=True)
     env = DataLoggerEnv(env)
 
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)

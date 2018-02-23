@@ -741,7 +741,7 @@ class TMazeRacecarGymEnv(gym.Env):
 
 from itertools import count
 if __name__ == '__main__':
-    env = TMazeRacecarGymEnv(is_discrete=True, renders=True, length=10, alternate=True, map_type='grid', randomize_start=True, randomize_signals=True)
+    env = TMazeRacecarGymEnv(is_discrete=True, renders=True, length=10, alternate=True, map_type='grid', randomize_start=False, randomize_signals=False)
     env = DataLoggerEnv(env)
 
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
@@ -749,6 +749,7 @@ if __name__ == '__main__':
     for t in range(20):
         print ("Run: ", t)
         pybullet.resetDebugVisualizerCamera(cameraDistance=10, cameraYaw=-90, cameraPitch=-60, cameraTargetPosition=[0, 0, 0])
+        # pybullet.resetDebugVisualizerCamera(cameraDistance=12, cameraYaw=-90, cameraPitch=-80, cameraTargetPosition=[8, 0, 0])
         env.reset()
 
         done = False
@@ -757,7 +758,6 @@ if __name__ == '__main__':
         while not done:
             env.render()
 
-            # input("")
             keys = pybullet.getKeyboardEvents()
             # print (keys)
             a = 1

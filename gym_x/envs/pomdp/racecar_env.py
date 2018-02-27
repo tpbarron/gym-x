@@ -48,7 +48,7 @@ class TMazeRacecarGymEnv(gym.Env):
                  map_type='tmaze', # tmaze or grid
                  randomize_start=True,
                  randomize_signals=False):
-        self.time_step = 0.01
+        self.time_step = 0.005
         # self.time_step = 0.005
         self.urdf_root = urdf_root
         self.action_repeat = action_repeat
@@ -245,7 +245,7 @@ class TMazeRacecarGymEnv(gym.Env):
         if theta < 0:
             theta += 2 * np.pi;
 
-        print ("turn: ", i1, i2, i3, theta)
+        # print ("turn: ", i1, i2, i3, theta)
         if theta > np.pi:
             return 0
         return 2
@@ -262,7 +262,7 @@ class TMazeRacecarGymEnv(gym.Env):
 
         # need 2.5 block shift toward pos2
         rand = 1 if self.randomize_signals else 0
-        delta = rand * np.random.randint(3)
+        delta = rand * np.random.randint(6)
 
         if dx != 0:
             block_pos[0] += np.sign(dx) * (2.5 + delta)
@@ -334,9 +334,11 @@ class TMazeRacecarGymEnv(gym.Env):
         cube_id = self.p.loadURDF("cube_black.urdf", basePosition=[-1, 0.5, 0.5])
         self.wall_block_ids.append(cube_id)
 
+        rand = np.random.randint(2, 9) #self.length-1)
+
         for i in range(-1, self.length):
             # place right block...
-            if i == 1 and self.switch == -1:
+            if i == rand and self.switch == -1:
                 cube_id = self.p.loadURDF("cube_red.urdf", basePosition=[i, -(self.width+1)/2.0, 0.5])
                 self.signal_block_ids.add(cube_id)
                 self.wall_block_ids.append(cube_id)
@@ -345,7 +347,7 @@ class TMazeRacecarGymEnv(gym.Env):
                 self.wall_block_ids.append(cube_id)
 
             # place left block..
-            if i == 1 and self.switch == 1:
+            if i == rand and self.switch == 1:
                 cube_id = self.p.loadURDF("cube_red.urdf", basePosition=[i, (self.width+1)/2.0, 0.5])
                 self.signal_block_ids.add(cube_id)
                 self.wall_block_ids.append(cube_id)
@@ -393,21 +395,27 @@ class TMazeRacecarGymEnv(gym.Env):
         self.p.setGravity(0, 0, -10)
         if self.map_type == 'grid':
             path = self.generate_random_path()
+            # [6, 3, 0, 1]
+            self.path = path
             print ("PATH: ", path)
             car_position = self.get_grid_position(path[0])
             car_position.append(0.2) # z
             # print (car_position)
             if self.randomize_start:
-                car_position[0] += np.random.random() - 0.5
-                car_position[1] += np.random.random() - 0.5
+                # car_position[0] += np.random.random() - 0.5
+                # car_position[1] += np.random.random() - 0.5
+                car_position[0] += np.random.uniform(-0.25, 0.25)
+                car_position[1] += np.random.uniform(-0.25, 0.25)
             car_orient = self.get_starting_orientation(path)
             # print (car_orient)
             self.racecar = racecar.Racecar(self.p, position=car_position, orientation=car_orient, urdfRootPath=self.urdf_root, timeStep=self.time_step)
         elif self.map_type == 'tmaze':
             car_position = [0, 0, 0.2]
             if self.randomize_start:
-                car_position[0] += np.random.random() - 0.5
-                car_position[1] += np.random.random() - 0.5
+                # car_position[0] += np.random.random() - 0.5
+                # car_position[1] += np.random.random() - 0.5
+                car_position[0] += np.random.uniform(-0.25, 1.0)
+                car_position[1] += np.random.uniform(-0.25, 0.25)
             self.racecar = racecar.Racecar(self.p, position=car_position, urdfRootPath=self.urdf_root, timeStep=self.time_step)
 
         self.env_step_counter = 0
@@ -524,10 +532,13 @@ class TMazeRacecarGymEnv(gym.Env):
 
             carpos, carorn = self.p.getBasePositionAndOrientation(self.racecar.racecarUniqueId)
             euler = self.p.getEulerFromQuaternion(carorn)
-            self.p.resetDebugVisualizerCamera(cameraDistance=8, cameraYaw=-90+np.rad2deg(euler[2]), cameraPitch=-60, cameraTargetPosition=carpos)
+            # self.p.resetDebugVisualizerCamera(cameraDistance=8, cameraYaw=-90+np.rad2deg(euler[2]), cameraPitch=-60, cameraTargetPosition=carpos)
 
             if self._termination():
                 break
+
+        self.p.resetDebugVisualizerCamera(cameraDistance=8, cameraYaw=-90+np.rad2deg(euler[2]), cameraPitch=-60, cameraTargetPosition=carpos)
+
         self.env_step_counter += 1
         observation = self.get_extended_observation()
         # compute reward based on movement before updated max and min x,y
@@ -542,6 +553,7 @@ class TMazeRacecarGymEnv(gym.Env):
             self.min_y = y
 
         done = self._termination()
+        # print (observation)
         return np.array(observation), reward, done, {}
 
     def render(self, mode='human', close=False):
@@ -740,39 +752,138 @@ class TMazeRacecarGymEnv(gym.Env):
 
 
 from itertools import count
+import os
+import sys
 if __name__ == '__main__':
-    env = TMazeRacecarGymEnv(is_discrete=True, renders=True, length=10, alternate=True, map_type='grid', randomize_start=False, randomize_signals=False)
+    save_dir = sys.argv[1]
+    map_t = sys.argv[2]
+    rand_sig = bool(int(sys.argv[3]))
+    rand_start = bool(int(sys.argv[4]))
+    n_traj = int(sys.argv[5])
+    length = int(sys.argv[6])
+    print (save_dir, map_t, rand_start, rand_sig, n_traj)
+    os.makedirs(save_dir, exist_ok=True)
+
+
+    # env = TMazeRacecarGymEnv(is_discrete=True, renders=False, length=10, alternate=True, map_type='tmaze', randomize_start=True, randomize_signals=True)
+    env = TMazeRacecarGymEnv(is_discrete=True, renders=False, length=length, alternate=True, map_type=map_t, randomize_start=rand_start, randomize_signals=rand_sig)
     env = DataLoggerEnv(env)
 
     pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, 0)
 
-    for t in range(20):
+    for t in range(n_traj):
         print ("Run: ", t)
         pybullet.resetDebugVisualizerCamera(cameraDistance=10, cameraYaw=-90, cameraPitch=-60, cameraTargetPosition=[0, 0, 0])
         # pybullet.resetDebugVisualizerCamera(cameraDistance=12, cameraYaw=-90, cameraPitch=-80, cameraTargetPosition=[8, 0, 0])
         env.reset()
 
         done = False
+        turn_steps = 0
+        turning = False
+        segment = 0
 
         # input("")
         while not done:
             env.render()
 
             keys = pybullet.getKeyboardEvents()
-            # print (keys)
-            a = 1
-            for k, v in keys.items():
-                if k == pybullet.B3G_LEFT_ARROW and v == pybullet.KEY_IS_DOWN:
-                    # print ('left')
-                    a = 2
-                elif k == pybullet.B3G_RIGHT_ARROW and v == pybullet.KEY_IS_DOWN:
-                    # print ("right")
-                    a = 0
-                elif k == pybullet.B3G_UP_ARROW and v == pybullet.KEY_IS_DOWN:
-                    # print ("up")
-                    a = 1
-                elif k == pybullet.B3G_DOWN_ARROW and v == pybullet.KEY_IS_DOWN:
-                    print ("no brake!")
+
+            if env.env.map_type == 'tmaze':
+                carpos, carorn = pybullet.getBasePositionAndOrientation(env.env.racecar.racecarUniqueId)
+                a = 1
+                if carpos[0] > env.env.length-1:
+                    if turn_steps < 20:
+                        a = 2 if env.env.switch == 1 else 0
+                        turn_steps += 1
+            else:
+                # print (env.env.path)
+                # get goal position along segment
+                # get current position
+                # determine delta
+                # determine turn direction
+                segment_start_pos = env.env.get_grid_position(env.env.path[segment])
+                segment_end_pos = env.env.get_grid_position(env.env.path[segment+1])
+                carpos, carorn = pybullet.getBasePositionAndOrientation(env.env.racecar.racecarUniqueId)
+
+                turn_offset = 1.5
+                a = 1
+                if turning:
+                    a = prev_turn
+                    turn_steps += 1
+                    if turn_steps > 26:
+                        turning = False
+                        turn_steps = 0
+                        segment += 1
+                else:
+                    turn_dir = None
+                    if segment < 2:
+                        turn_dir = env.env.get_turn_direction(env.env.path[segment], env.env.path[segment+1], env.env.path[segment+2])
+                        delta = [segment_end_pos[i]-segment_start_pos[i] for i in range(2)]
+
+                    # if straight
+                    if turn_dir is not None and turn_dir == 1:
+                        # print ("Delta (straight):", delta)
+                        if delta[0] > 0:
+                            # moving along x
+                            if carpos[0] > segment_end_pos[0]:
+                                segment += 1
+                        elif delta[0] < 0:
+                            if carpos[0] < segment_end_pos[0]:
+                                segment += 1
+                        elif delta[1] > 0:
+                            # moving along y
+                            if carpos[1] > segment_end_pos[1]:
+                                segment += 1
+                        elif delta[1] < 0:
+                            # other dir y
+                            if carpos[1] < segment_end_pos[1]:
+                                segment += 1
+
+                    # if valid and not straight
+                    if turn_dir is not None and turn_dir != 1:
+                        # print ("Delta (turn):", delta)
+                        if delta[0] > 0:
+                            # moving along x
+                            if carpos[0] > segment_end_pos[0] - turn_offset:
+                                # start turn,
+                                turning = True
+                                prev_turn = 2 if turn_dir == 0 else 0
+                        elif delta[0] < 0:
+                            # other dir x
+                            # moving along x
+                            if carpos[0] < segment_end_pos[0] + turn_offset:
+                                # start turn,
+                                turning = True
+                                prev_turn = 2 if turn_dir == 0 else 0
+                        elif delta[1] > 0:
+                            # moving along y
+                            if carpos[1] > segment_end_pos[1] - turn_offset:
+                                # start turn,
+                                turning = True
+                                prev_turn = 2 if turn_dir == 0 else 0
+                        elif delta[1] < 0:
+                            # other dir y
+                            if carpos[1] < segment_end_pos[1] + turn_offset:
+                                # start turn,
+                                prev_turn = 2 if turn_dir == 0 else 0
+                                turning = True
+
+
+
+            # # print (keys)
+            # a = 1
+            # for k, v in keys.items():
+            #     if k == pybullet.B3G_LEFT_ARROW and v == pybullet.KEY_IS_DOWN:
+            #         # print ('left')
+            #         a = 2
+            #     elif k == pybullet.B3G_RIGHT_ARROW and v == pybullet.KEY_IS_DOWN:
+            #         # print ("right")
+            #         a = 0
+            #     elif k == pybullet.B3G_UP_ARROW and v == pybullet.KEY_IS_DOWN:
+            #         # print ("up")
+            #         a = 1
+            #     elif k == pybullet.B3G_DOWN_ARROW and v == pybullet.KEY_IS_DOWN:
+            #         print ("no brake!")
 
             # input("")
             obs, rew, done, info = env.step(a) #env.action_space.sample())
@@ -792,16 +903,16 @@ if __name__ == '__main__':
         data = env.to_numpy()
         s, a, r, t = data
         # print (s.shape, a.shape, r.shape, t.shape)
-        np.save('states.npy', s)
-        np.save('actions.npy', a)
-        np.save('rewards.npy', r)
-        np.save('terminals.npy', t)
+        np.save(os.path.join(save_dir, 'states.npy'), s)
+        np.save(os.path.join(save_dir, 'actions.npy'), a)
+        np.save(os.path.join(save_dir, 'rewards.npy'), r)
+        np.save(os.path.join(save_dir, 'terminals.npy'), t)
 
         # done here
     data = env.to_numpy()
     s, a, r, t = data
     print (s.shape, a.shape, r.shape, t.shape)
-    np.save('states.npy', s)
-    np.save('actions.npy', a)
-    np.save('rewards.npy', r)
-    np.save('terminals.npy', t)
+    np.save(os.path.join(save_dir, 'states.npy'), s)
+    np.save(os.path.join(save_dir, 'actions.npy'), a)
+    np.save(os.path.join(save_dir, 'rewards.npy'), r)
+    np.save(os.path.join(save_dir, 'terminals.npy'), t)

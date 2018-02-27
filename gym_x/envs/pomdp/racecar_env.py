@@ -383,7 +383,7 @@ class TMazeRacecarGymEnv(gym.Env):
 
     def reset(self):
         self.p.resetSimulation()
-        self.p.setPhysicsEngineParameter(numSolverIterations=10)
+        self.p.setPhysicsEngineParameter(numSolverIterations=100)
         self.p.setTimeStep(self.time_step)
         stadiumobjects = self.p.loadSDF(os.path.join(self.urdf_root,"stadium.sdf"))
         #move the stadium objects slightly above 0
@@ -810,7 +810,7 @@ if __name__ == '__main__':
                 if turning:
                     a = prev_turn
                     turn_steps += 1
-                    if turn_steps > 26:
+                    if turn_steps > 19:
                         turning = False
                         turn_steps = 0
                         segment += 1

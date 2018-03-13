@@ -36,7 +36,7 @@ class TMazeRacecarGymEnv(gym.Env):
     def __init__(self,
                  urdf_root=pybullet_data.getDataPath(),
                  action_repeat=10,
-                 # action_repeat=50,
+                 time_step=0.005,
                  is_enable_self_collision=True,
                  is_discrete=False,
                  renders=False,
@@ -48,8 +48,7 @@ class TMazeRacecarGymEnv(gym.Env):
                  map_type='tmaze', # tmaze or grid
                  randomize_start=True,
                  randomize_signals=False):
-        self.time_step = 0.005
-        # self.time_step = 0.005
+        self.time_step = time_step
         self.urdf_root = urdf_root
         self.action_repeat = action_repeat
         self.is_enable_self_collision = is_enable_self_collision
@@ -900,13 +899,13 @@ if __name__ == '__main__':
 
             # input("")
         # save after each episode so can quit early...
-        data = env.to_numpy()
-        s, a, r, t = data
-        # print (s.shape, a.shape, r.shape, t.shape)
-        np.save(os.path.join(save_dir, 'states.npy'), s)
-        np.save(os.path.join(save_dir, 'actions.npy'), a)
-        np.save(os.path.join(save_dir, 'rewards.npy'), r)
-        np.save(os.path.join(save_dir, 'terminals.npy'), t)
+        # data = env.to_numpy()
+        # s, a, r, t = data
+        # # print (s.shape, a.shape, r.shape, t.shape)
+        # np.save(os.path.join(save_dir, 'states.npy'), s)
+        # np.save(os.path.join(save_dir, 'actions.npy'), a)
+        # np.save(os.path.join(save_dir, 'rewards.npy'), r)
+        # np.save(os.path.join(save_dir, 'terminals.npy'), t)
 
         # done here
     data = env.to_numpy()

@@ -333,8 +333,11 @@ class TMazeRacecarGymEnv(gym.Env):
         cube_id = self.p.loadURDF("cube_black.urdf", basePosition=[-1, 0.5, 0.5])
         self.wall_block_ids.append(cube_id)
 
-        rand = np.random.randint(2, 9) #self.length-1)
-
+        if self.randomize_signals:
+            rand = np.random.randint(2, 9) #self.length-1)
+        else:
+            rand = 2
+            
         for i in range(-1, self.length):
             # place right block...
             if i == rand and self.switch == -1:
